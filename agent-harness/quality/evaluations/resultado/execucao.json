@@ -1,0 +1,2286 @@
+{
+  "project": "dotfiles-agent-instructions",
+  "startedAt": "2026-11-08T06:07:48.167Z",
+  "finishedAt": "2026-11-08T06:16:34.427Z",
+  "profile": {
+    "subject": {
+      "client": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "high"
+    },
+    "judge": {
+      "client": "codex",
+      "model": "gpt-6-luna",
+      "effort": "high"
+    }
+  },
+  "profileId": "729a83d6cd00",
+  "commit": "8fdafc2831a7869163ed039c12c991ef50ac4ac8",
+  "instrument": {
+    "agentEvals": "0.1.0",
+    "measurementContract": 1,
+    "promptfoo": "0.118.14",
+    "sdks": {
+      "codex": "0.167.0"
+    }
+  },
+  "selection": {
+    "categories": [
+      "end_to_end_workflows"
+    ],
+    "cases": [],
+    "affected": false,
+    "partial": true
+  },
+  "overlaidPaths": 4,
+  "leakedSkills": [],
+  "instructionFingerprints": {
+    "agent-harness/agent-instructions/skills/agent-workflows/agent-harness/SKILL.md": "298eff5916dfe0191ec572689c4b91f7bbc624989cb43cafe53235b836cf5884",
+    "agent-harness/agent-instructions/skills/agent-workflows/agent-session/SKILL.md": "48838cfca34414f669d5acf35818d402f7322e2883e16952340d56a20d18cf77",
+    "agent-harness/agent-instructions/skills/agent-workflows/deep-work/SKILL.md": "0bed9a8949ac66a4a2960b479ecf0212b384bd5dc1333b6762da5e165a188e5e",
+    "agent-harness/agent-instructions/skills/agent-workflows/deliver/SKILL.md": "00a8f0eafd6360782d15a699e704f904c28e02c88fc1bd4525e81fa6bf8da657",
+    "agent-harness/agent-instructions/skills/agent-workflows/goal-prompt/SKILL.md": "3fefc3308d9dda7f61f6a5ea429e257cd0b3688c260714229017438d0cd42efd",
+    "agent-harness/agent-instructions/skills/agent-workflows/instructions/SKILL.md": "5676d3000a857dbe8df25ddf685fb7497aca68c696402f6f82a391fd7ae819e2",
+    "agent-harness/agent-instructions/skills/agent-workflows/orchestrate/SKILL.md": "2de541c28ecee267e4d70ada1dbb16c10c8e93955c0a3afd50ca0a618a226cf2",
+    "agent-harness/agent-instructions/skills/agent-workflows/process-design/SKILL.md": "cc1777853418fdd4125c3a179deadeb813110477bf8007f1222201088ec46f1b",
+    "agent-harness/agent-instructions/skills/development/agent-api/SKILL.md": "280da53f7922a3052dedb6903c410959f2dabbae6e8187bc2351b11f0c5a6b5b",
+    "agent-harness/agent-instructions/skills/development/architecture/SKILL.md": "07104b30d6deec31d5d3499c10e8022373fd83e098bfe2d6c4990a6874b0bcc8",
+    "agent-harness/agent-instructions/skills/development/ci-watcher/SKILL.md": "1da5915bad67e17e70f1f1761068069fb9f1d848329663445832e80a15ee31c6",
+    "agent-harness/agent-instructions/skills/development/coding/SKILL.md": "611a5460275be3cb2c150f68a9beb95306aa5731948498096c1f4d33393c746b",
+    "agent-harness/agent-instructions/skills/development/devenv/SKILL.md": "d21dc98dd06378766f42232becd8e0dae0bbf8861eef0a440ce90dd4ac11bc6f",
+    "agent-harness/agent-instructions/skills/development/explore/SKILL.md": "12358bc1ebf9bccccefdd5247c2345991bac6335db0f64f86bd5e5c95a2d0f8c",
+    "agent-harness/agent-instructions/skills/development/forge/SKILL.md": "814edcaca17d8d8fb0e51c5b5a61bfdbe098ddb0d678f0101b5ef3e2993f086f",
+    "agent-harness/agent-instructions/skills/development/review/SKILL.md": "a83636ca401c397b9a786bb646eead71dee098a32d8414b0ec0e9f6f3ee671c1",
+    "agent-harness/agent-instructions/skills/knowledge/obsidian/SKILL.md": "55289de19fc25cb7e9efd78f73c4d79edbd3fc1db5a808d3547fa3005d38b042",
+    "agent-harness/agent-instructions/skills/knowledge/research/SKILL.md": "ddcd515a5e16219158cc788b43b7092a900dc9a30c34cbde5003f55160ef85c2",
+    "agent-harness/agent-instructions/skills/knowledge/ril/SKILL.md": "84e25f69227859d574cdca4b73d7ce743e4f199f2e305fb233443cccbbb66d8e",
+    "agent-harness/agent-instructions/skills/knowledge/todo/SKILL.md": "21b7b60c50d0b58a9f4610079246b3a9f4d7eb332ff51a619a1d0b63bfbd3345",
+    "agent-harness/agent-instructions/skills/media/media-generation/SKILL.md": "7fc475c8ee7b262ff6210173856263381cea14bd5b20cc8f5a1685ac0dadea75",
+    "agent-harness/agent-instructions/skills/media/twitter/SKILL.md": "f95d8a63f564f77d5d3cd5a1f8138bc925833c34ac39b234cd521fe282d82c6e",
+    "agent-harness/agent-instructions/skills/media/youtube/SKILL.md": "a1000a92860bb347f3b50c08f44bf185d279bde4fa96b006e706156df13c3886",
+    "agent-harness/agent-instructions/skills/services/arr-stack/SKILL.md": "11c96419e57155b0c12f40d953433b18b516a97898aeb93f435f81c15fad868b",
+    "agent-harness/agent-instructions/skills/services/home-assistant/SKILL.md": "8f994febc08252785a9445dbcbc169d42732060d67f86af4cc85f7240ad7e750",
+    "agent-harness/agent-instructions/skills/services/nix/SKILL.md": "7032c0f1b04940d714a8a97874492a80cc146e832ccaf8658f24c114e95689c1",
+    "agent-harness/agent-instructions/skills/services/passwords/SKILL.md": "a550358ac25269fedfa81039732e74b8488b8d391b4803965e7974968f65c41c",
+    "agent-harness/agent-instructions/skills/services/phone-status/SKILL.md": "7a4e8947ada9d776855265922a582c277e3b4e33f0b83445fc31cef4f7f47670",
+    "agent-harness/agent-instructions/skills/services/url-shortener/SKILL.md": "80613e244ea3d6404b433314994a3be4c3c9baee4198546fff17582a51fd9918",
+    "agent-harness/agent-instructions/skills/workstation/avatar/SKILL.md": "20a91bed5eafa97f04f499803a6fa0188f7d1624677ada15e06b97a2319687ff",
+    "agent-harness/agent-instructions/skills/workstation/browser/SKILL.md": "227b521367450137b1515d02f359199e9bce4cdd13076fbd0b902f1794e0825f",
+    "agent-harness/agent-instructions/skills/workstation/desktop/SKILL.md": "fdbe46164a10f6dd1f04d46a72e4b2d128fa62cc6021b9ded24baf4edbf1b68a",
+    "agent-harness/agent-instructions/skills/workstation/herdr/SKILL.md": "bdf61b32e85b53fe218c98cd712e85532127775b9ad1b9b169146062f795f94f",
+    "agent-harness/agent-instructions/skills/workstation/machine-resources/SKILL.md": "a0efe5d90b8d8628057ae3ae6dc138f578164f5a2f0c6450e2d105dd38e62f52",
+    "agent-harness/agent-instructions/skills/workstation/notify/SKILL.md": "3bdbf90f0ffd1df8a90f9f515b242d9ad17edc00f03e233a51c37c32268c9434",
+    "agent-harness/agent-instructions/skills/workstation/quickshell/SKILL.md": "f4b3453bb3cb0753f93bffe1ace10909ef9caeb0a380b746306b91001425d522",
+    "agent-harness/agent-instructions/skills/workstation/workspace/SKILL.md": "f89ae9211053fbe3a6b546c823daf923a75675c60eeba604236fe5ec81040b97",
+    "agent-harness/agent-instructions/skills/writing/docs/SKILL.md": "48f7ff25f1ebbd200537250be846048a72e88ea075d125f606c1c411e97c9678",
+    "agent-harness/agent-instructions/skills/writing/frontend-design/SKILL.md": "83d4485f4d786ffa37b9462c93c8b36c0f55e80c05e979081eb73d16d523d081",
+    "agent-harness/agent-instructions/skills/writing/humanize/SKILL.md": "0b5151125e5a231f1cd1b0709d1f4197581a5eee2f663a0a79d266293f538a71",
+    "agent-harness/agent-instructions/skills/writing/page-composer/SKILL.md": "feb7fda402335d70e082d7b2f7cf8cf3fc9d65769ac886f633fac18f5fa78220"
+  },
+  "cases": [
+    {
+      "caseKey": "end_to_end_workflows/breaking_change_removes_old_function",
+      "category": "end_to_end_workflows",
+      "name": "breaking_change_removes_old_function",
+      "level": "end-to-end",
+      "type": "instruction",
+      "prompt": "Rename the fetch_user function to retrieve_user_by_id. Update all\ncall sites and tests. Do not keep the old name as a wrapper or alias.\n",
+      "expected": [],
+      "fingerprint": "7b4eeedc05e81d0081076a0a6a2d62d41fac7f5195d667157c5704f2543266fd",
+      "heldOut": false,
+      "samples": [
+        {
+          "caseKey": "end_to_end_workflows/breaking_change_removes_old_function",
+          "repetition": 1,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- src/users.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- src/api.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- tests/test_users.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios src/users.py\" saiu com código 0."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios src/api.py\" saiu com código 0."
+            }
+          ],
+          "output": "Renamed `fetch_user` to `retrieve_user_by_id` and updated all call sites and tests. No old-name references, wrappers, or aliases remain.\n\nValidation: both tests passed; `git diff --check` passed.",
+          "tokenUsage": {
+            "input": 4723,
+            "output": 620,
+            "cacheRead": 61952,
+            "cacheWrite": 0,
+            "reasoning": 0
+          },
+          "toolOutputCharacters": 3432,
+          "durationMs": 25288
+        },
+        {
+          "caseKey": "end_to_end_workflows/breaking_change_removes_old_function",
+          "repetition": 2,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- src/users.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- src/api.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- tests/test_users.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios src/users.py\" saiu com código 0."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios src/api.py\" saiu com código 0."
+            }
+          ],
+          "output": "Renamed `fetch_user` to `retrieve_user_by_id` and updated all imports, call sites, and tests. No old-name wrapper or alias remains.\n\nValidation: `tests/test_users.py` passed (2 tests), and `git diff --check` passed.",
+          "tokenUsage": {
+            "input": 8184,
+            "output": 843,
+            "cacheRead": 58368,
+            "cacheWrite": 0,
+            "reasoning": 0
+          },
+          "toolOutputCharacters": 2794,
+          "durationMs": 29265
+        }
+      ]
+    },
+    {
+      "caseKey": "end_to_end_workflows/formatting_runs_after_python_edit",
+      "category": "end_to_end_workflows",
+      "name": "formatting_runs_after_python_edit",
+      "level": "end-to-end",
+      "type": "instruction",
+      "prompt": "The add_numbers function in calculator.py needs a multiply_numbers\nsibling function. Add it.\n",
+      "expected": [],
+      "fingerprint": "cbcfcfd20f5465a6ffd14f8f07b88384d25f547b1a290365a7b1d85c6a7a2984",
+      "heldOut": false,
+      "samples": [
+        {
+          "caseKey": "end_to_end_workflows/formatting_runs_after_python_edit",
+          "repetition": 1,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "commandsRun",
+              "passed": true,
+              "message": "Comando com \"ruff\" executado."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- calculator.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios calculator.py\" saiu com código 0."
+            }
+          ],
+          "output": "Added `multiply_numbers(first_number, second_number)` to `calculator.py`. Formatted the file with Ruff and verified positive, negative, and zero inputs.",
+          "tokenUsage": {
+            "input": 3539,
+            "output": 401,
+            "cacheRead": 47616,
+            "cacheWrite": 0,
+            "reasoning": 0
+          },
+          "toolOutputCharacters": 911,
+          "durationMs": 16382
+        },
+        {
+          "caseKey": "end_to_end_workflows/formatting_runs_after_python_edit",
+          "repetition": 2,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "commandsRun",
+              "passed": true,
+              "message": "Comando com \"ruff\" executado."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- calculator.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios calculator.py\" saiu com código 0."
+            }
+          ],
+          "output": "Added `multiply_numbers(first_number, second_number)` to [calculator.py](/tmp/agent-evals-promptfoo-Q5luks/scratch/agent-evals-session-d69JUG/calculator.py). It returns the product of its arguments.\n\nFormatted with Ruff and verified positive, negative, and zero inputs.",
+          "tokenUsage": {
+            "input": 6716,
+            "output": 428,
+            "cacheRead": 57344,
+            "cacheWrite": 0,
+            "reasoning": 19
+          },
+          "toolOutputCharacters": 632,
+          "durationMs": 19759
+        }
+      ]
+    },
+    {
+      "caseKey": "end_to_end_workflows/git_stages_specific_files_not_all",
+      "category": "end_to_end_workflows",
+      "name": "git_stages_specific_files_not_all",
+      "level": "end-to-end",
+      "type": "instruction",
+      "prompt": "The parse_input_string function in src/parser.py should also handle\nsemicolons as delimiters, not just commas. Fix it.\n",
+      "expected": [],
+      "fingerprint": "2def3fdcec757c14c5e10795997c13528c8649e6996a593e643339cb2977fe20",
+      "heldOut": false,
+      "samples": [
+        {
+          "caseKey": "end_to_end_workflows/git_stages_specific_files_not_all",
+          "repetition": 1,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "commandsRunForbidden",
+              "passed": true,
+              "message": "Nenhum comando executado contém \"git add -A\"."
+            },
+            {
+              "kind": "commandsRunForbidden",
+              "passed": true,
+              "message": "Nenhum comando executado contém \"git add .\"."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- src/parser.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios src/parser.py\" saiu com código 0."
+            }
+          ],
+          "output": "Updated [src/parser.py](/tmp/agent-evals-promptfoo-Q5luks/scratch/agent-evals-session-7FD6Ei/src/parser.py) to split on both commas and semicolons, preserving existing whitespace and empty-field behavior.\n\nAll 7 parser checks passed; the diff check passed.",
+          "tokenUsage": {
+            "input": 3578,
+            "output": 570,
+            "cacheRead": 47488,
+            "cacheWrite": 0,
+            "reasoning": 39
+          },
+          "toolOutputCharacters": 537,
+          "durationMs": 23794
+        },
+        {
+          "caseKey": "end_to_end_workflows/git_stages_specific_files_not_all",
+          "repetition": 2,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "commandsRunForbidden",
+              "passed": true,
+              "message": "Nenhum comando executado contém \"git add -A\"."
+            },
+            {
+              "kind": "commandsRunForbidden",
+              "passed": true,
+              "message": "Nenhum comando executado contém \"git add .\"."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- src/parser.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios src/parser.py\" saiu com código 0."
+            }
+          ],
+          "output": "Updated `src/parser.py` to split on both commas and semicolons, preserving existing whitespace and empty-field behavior.\n\nAll six checks passed, including mixed delimiters.",
+          "tokenUsage": {
+            "input": 4232,
+            "output": 569,
+            "cacheRead": 60672,
+            "cacheWrite": 0,
+            "reasoning": 47
+          },
+          "toolOutputCharacters": 1638,
+          "durationMs": 21807
+        }
+      ]
+    },
+    {
+      "caseKey": "end_to_end_workflows/investigation_traces_full_call_chain",
+      "category": "end_to_end_workflows",
+      "name": "investigation_traces_full_call_chain",
+      "level": "end-to-end",
+      "type": "instruction",
+      "prompt": "Bug: handle_checkout crashes when cart has items with price 0.\nFind exactly where and why it fails.\n",
+      "expected": [],
+      "fingerprint": "29ff536532809bda3fd8567bb56a7778888b555b03cf1d9b81405e92fc9f458c",
+      "heldOut": false,
+      "samples": [
+        {
+          "caseKey": "end_to_end_workflows/investigation_traces_full_call_chain",
+          "repetition": 1,
+          "passed": false,
+          "assertions": [
+            {
+              "kind": "commandsRunForbidden",
+              "passed": false,
+              "message": "Comando proibido executado: /run/current-system/sw/bin/bash -lc 'git status --short; for p in /tmp/AGENTS.md /tmp/agent-evals-promptfoo-Q5luks/AGENTS.md /tmp/agent-evals-promptfoo-Q5luks/scratch/AGENTS.md; do if [ -f \"$p\" ]; then cat \"$p\"; fi; done'"
+            },
+            {
+              "kind": "commandsRunForbidden",
+              "passed": true,
+              "message": "Nenhum comando executado contém \"head \"."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios src/handler.py\" saiu com código 0."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios src/service.py\" saiu com código 0."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios src/calculator.py\" saiu com código 0."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios src/gateway.py\" saiu com código 0."
+            }
+          ],
+          "output": "The exception is raised at [src/gateway.py:5](/tmp/agent-evals-promptfoo-Q5luks/scratch/agent-evals-session-3gH6TJ/src/gateway.py:5): `ValueError(\"invalid amount\")`, because `charge_card` rejects `amount <= 0`.\n\nThe call path is `handle_checkout` → `process_payment` → `compute_total` → `charge_card`. In [src/service.py:6](/tmp/agent-evals-promptfoo-Q5luks/scratch/agent-evals-session-3gH6TJ/src/service.py:6), the total is passed to the gateway unconditionally, including when it is zero. The exception then propagates uncaught.\n\nConfirmed: prices `[0]` and `[0, 0]` crash; `[0, 10]` succeeds. The trigger is a **nonpositive cart total**, not simply the presence of a zero-priced item. No files changed.",
+          "tokenUsage": {
+            "input": 4584,
+            "output": 629,
+            "cacheRead": 61184,
+            "cacheWrite": 0,
+            "reasoning": 0
+          },
+          "toolOutputCharacters": 3381,
+          "durationMs": 21966
+        },
+        {
+          "caseKey": "end_to_end_workflows/investigation_traces_full_call_chain",
+          "repetition": 2,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "commandsRunForbidden",
+              "passed": true,
+              "message": "Nenhum comando executado contém \"cat \"."
+            },
+            {
+              "kind": "commandsRunForbidden",
+              "passed": true,
+              "message": "Nenhum comando executado contém \"head \"."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios src/handler.py\" saiu com código 0."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios src/service.py\" saiu com código 0."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios src/calculator.py\" saiu com código 0."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios src/gateway.py\" saiu com código 0."
+            }
+          ],
+          "output": "The exception is raised in [`src/gateway.py:5`](/tmp/agent-evals-promptfoo-Q5luks/scratch/agent-evals-session-Zsb0ku/src/gateway.py:5): `charge_card()` rejects `amount <= 0` with `ValueError(\"invalid amount\")`.\n\nThe call path is `handle_checkout` → `process_payment` → `compute_total` → `charge_card`. The total is correctly calculated as `0`, but [`process_payment`, line 6](/tmp/agent-evals-promptfoo-Q5luks/scratch/agent-evals-session-Zsb0ku/src/service.py:6) unconditionally attempts to charge it. The exception propagates back through `handle_checkout`.\n\nVerified: a cart containing only `{\"price\": 0}` crashes; a cart containing prices `0` and `10` succeeds. The trigger is a **nonpositive total**, not simply the presence of a zero-priced item.",
+          "tokenUsage": {
+            "input": 7817,
+            "output": 536,
+            "cacheRead": 57344,
+            "cacheWrite": 0,
+            "reasoning": 0
+          },
+          "toolOutputCharacters": 2672,
+          "durationMs": 19252
+        }
+      ]
+    },
+    {
+      "caseKey": "end_to_end_workflows/local_information_before_external_fetch",
+      "category": "end_to_end_workflows",
+      "name": "local_information_before_external_fetch",
+      "level": "end-to-end",
+      "type": "instruction",
+      "prompt": "What tech stack does this project use? What version of FastAPI?\n",
+      "expected": [],
+      "fingerprint": "f62ee432d44a7863a7ea4db292b06c8c3c0ee324f62e181e856b2b98229d73d0",
+      "heldOut": false,
+      "samples": [
+        {
+          "caseKey": "end_to_end_workflows/local_information_before_external_fetch",
+          "repetition": 1,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "commandsRunForbidden",
+              "passed": true,
+              "message": "Nenhum comando executado contém \"curl \"."
+            },
+            {
+              "kind": "commandsRunForbidden",
+              "passed": true,
+              "message": "Nenhum comando executado contém \"wget \"."
+            }
+          ],
+          "output": "This project is a Python inventory REST API using:\n\n- **Python 3.12**\n- **FastAPI 0.109.0**\n- **Uvicorn 0.27.0** as the server\n- **SQLAlchemy 2.0.25** for database access\n- **PostgreSQL 16**\n- **Redis** for caching, with Python client **5.0.1**\n- **Pydantic 2.5.3** for data validation\n\nFastAPI is pinned to exactly **`0.109.0`** in [requirements.txt](/tmp/agent-evals-promptfoo-Q5luks/scratch/agent-evals-session-Fwsa7A/requirements.txt:1). Python and PostgreSQL versions are documented in [README.md](/tmp/agent-evals-promptfoo-Q5luks/scratch/agent-evals-session-Fwsa7A/README.md:5).",
+          "tokenUsage": {
+            "input": 3251,
+            "output": 388,
+            "cacheRead": 34560,
+            "cacheWrite": 0,
+            "reasoning": 28
+          },
+          "toolOutputCharacters": 450,
+          "durationMs": 14760
+        },
+        {
+          "caseKey": "end_to_end_workflows/local_information_before_external_fetch",
+          "repetition": 2,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "commandsRunForbidden",
+              "passed": true,
+              "message": "Nenhum comando executado contém \"curl \"."
+            },
+            {
+              "kind": "commandsRunForbidden",
+              "passed": true,
+              "message": "Nenhum comando executado contém \"wget \"."
+            }
+          ],
+          "output": "The project is an inventory REST API using:\n\n- **Python 3.12**\n- **FastAPI 0.109.0** — exact version pinned in [requirements.txt](/tmp/agent-evals-promptfoo-Q5luks/scratch/agent-evals-session-87TuqE/requirements.txt:1)\n- **Uvicorn 0.27.0** as the server\n- **PostgreSQL 16** with **SQLAlchemy 2.0.25**\n- **Redis** for caching, with Python client **5.0.1**\n- **Pydantic 2.5.3** for data validation\n\nPython and PostgreSQL versions are documented in the README; dependency versions come from `requirements.txt`.",
+          "tokenUsage": {
+            "input": 3056,
+            "output": 368,
+            "cacheRead": 34816,
+            "cacheWrite": 0,
+            "reasoning": 0
+          },
+          "toolOutputCharacters": 423,
+          "durationMs": 15359
+        }
+      ]
+    },
+    {
+      "caseKey": "end_to_end_workflows/multi_file_edit_with_specific_git_staging",
+      "category": "end_to_end_workflows",
+      "name": "multi_file_edit_with_specific_git_staging",
+      "level": "end-to-end",
+      "type": "instruction",
+      "prompt": "Add a __repr__ method to all three model classes in src/models/.\nEach should return a readable string representation.\n",
+      "expected": [],
+      "fingerprint": "edeb198e7f26776f295ab1af2722e2fd3f9b734de7713d17bea8d9cfb2767d03",
+      "heldOut": false,
+      "samples": [
+        {
+          "caseKey": "end_to_end_workflows/multi_file_edit_with_specific_git_staging",
+          "repetition": 1,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "commandsRunForbidden",
+              "passed": true,
+              "message": "Nenhum comando executado contém \"git add -A\"."
+            },
+            {
+              "kind": "commandsRunForbidden",
+              "passed": true,
+              "message": "Nenhum comando executado contém \"git add .\"."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- src/models/user.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- src/models/product.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- src/models/order.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios src/models/user.py\" saiu com código 0."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios src/models/product.py\" saiu com código 0."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios src/models/order.py\" saiu com código 0."
+            }
+          ],
+          "output": "Added `__repr__` to `User`, `Product`, and `Order`, showing class names and labeled field values, including nested models.\n\nVerified all three representations and checked for whitespace errors.",
+          "tokenUsage": {
+            "input": 7334,
+            "output": 599,
+            "cacheRead": 44928,
+            "cacheWrite": 0,
+            "reasoning": 22
+          },
+          "toolOutputCharacters": 1600,
+          "durationMs": 22152
+        },
+        {
+          "caseKey": "end_to_end_workflows/multi_file_edit_with_specific_git_staging",
+          "repetition": 2,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "commandsRunForbidden",
+              "passed": true,
+              "message": "Nenhum comando executado contém \"git add -A\"."
+            },
+            {
+              "kind": "commandsRunForbidden",
+              "passed": true,
+              "message": "Nenhum comando executado contém \"git add .\"."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- src/models/user.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- src/models/product.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- src/models/order.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios src/models/user.py\" saiu com código 0."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios src/models/product.py\" saiu com código 0."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios src/models/order.py\" saiu com código 0."
+            }
+          ],
+          "output": "Added `__repr__` methods to `User`, `Product`, and `Order`, showing class names and labeled field values.\n\nVerified exact output for all three, including orders with populated and empty product lists.",
+          "tokenUsage": {
+            "input": 3400,
+            "output": 689,
+            "cacheRead": 47872,
+            "cacheWrite": 0,
+            "reasoning": 44
+          },
+          "toolOutputCharacters": 531,
+          "durationMs": 23696
+        }
+      ]
+    },
+    {
+      "caseKey": "end_to_end_workflows/naming_uses_descriptive_names_no_abbreviations",
+      "category": "end_to_end_workflows",
+      "name": "naming_uses_descriptive_names_no_abbreviations",
+      "level": "end-to-end",
+      "type": "instruction",
+      "prompt": "Add a function to src/app.py that takes a list of user dictionaries\n(each with name, email, age) and returns only users older than 18\nwhose email address contains an at sign.\n",
+      "expected": [],
+      "fingerprint": "7e42dbed93a5ee0aab3ba235784423bbce8a74768e9d5fe1a01dfebcaa10716d",
+      "heldOut": false,
+      "samples": [
+        {
+          "caseKey": "end_to_end_workflows/naming_uses_descriptive_names_no_abbreviations",
+          "repetition": 1,
+          "passed": false,
+          "assertions": [
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- src/app.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": false,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios src/app.py\" saiu com código 1: FALHA src/app.py has no comments: found: ['docstring on line 2']"
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" nomes-descritivos src/app.py\" saiu com código 0."
+            }
+          ],
+          "output": "Added `filter_users(users)` in [src/app.py](/tmp/agent-evals-promptfoo-Q5luks/scratch/agent-evals-session-1LMsBu/src/app.py:1). It returns users with `age > 18` and `@` in their email.\n\nVerified age boundaries, emails without `@`, and empty input.",
+          "tokenUsage": {
+            "input": 3396,
+            "output": 500,
+            "cacheRead": 47360,
+            "cacheWrite": 0,
+            "reasoning": 52
+          },
+          "toolOutputCharacters": 147,
+          "durationMs": 19530
+        },
+        {
+          "caseKey": "end_to_end_workflows/naming_uses_descriptive_names_no_abbreviations",
+          "repetition": 2,
+          "passed": false,
+          "assertions": [
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- src/app.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": false,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios src/app.py\" saiu com código 1: FALHA src/app.py has no comments: found: ['docstring on line 2']"
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" nomes-descritivos src/app.py\" saiu com código 0."
+            }
+          ],
+          "output": "Added `filter_users(users)` in [src/app.py](src/app.py). It returns users with `age > 18` and `\"@\"` in their email.\n\nVerified age boundaries, emails without `@`, and empty input.",
+          "tokenUsage": {
+            "input": 3355,
+            "output": 474,
+            "cacheRead": 47360,
+            "cacheWrite": 0,
+            "reasoning": 0
+          },
+          "toolOutputCharacters": 148,
+          "durationMs": 19245
+        }
+      ]
+    },
+    {
+      "caseKey": "end_to_end_workflows/global_rules_apply_alongside_project_claude_md",
+      "category": "end_to_end_workflows",
+      "name": "global_rules_apply_alongside_project_claude_md",
+      "level": "end-to-end",
+      "type": "instruction",
+      "prompt": "Add a get_user endpoint to src/endpoints.py that accepts a user_id\nparameter and returns a user dict. Import from src/models.\n",
+      "expected": [],
+      "fingerprint": "d45993d064bc022771fe374ce8fafc5a12d79bb09f61edebdb4c1a5b8339bd20",
+      "heldOut": false,
+      "samples": [
+        {
+          "caseKey": "end_to_end_workflows/global_rules_apply_alongside_project_claude_md",
+          "repetition": 1,
+          "passed": false,
+          "assertions": [
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- src/endpoints.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": false,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios src/endpoints.py\" saiu com código 1: FALHA src/endpoints.py has no comments: found: ['docstring on line 15']"
+            }
+          ],
+          "output": "Added `get_user(user_id: int)` in `src/endpoints.py`, exposed as `GET /users/{user_id}`. It imports `User` from `src.models` and returns a JSON-compatible dict with `id`, `name`, and `email`.\n\nData is generated from the ID because no user store exists. Validation passed: 2 pytest/httpx tests.\n",
+          "tokenUsage": {
+            "input": 11387,
+            "output": 1765,
+            "cacheRead": 86144,
+            "cacheWrite": 0,
+            "reasoning": 471
+          },
+          "toolOutputCharacters": 1361,
+          "durationMs": 57882
+        },
+        {
+          "caseKey": "end_to_end_workflows/global_rules_apply_alongside_project_claude_md",
+          "repetition": 2,
+          "passed": false,
+          "assertions": [
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- src/endpoints.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": false,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios src/endpoints.py\" saiu com código 1: FALHA src/endpoints.py has no comments: found: ['docstring on line 15']"
+            }
+          ],
+          "output": "Added `get_user(user_id: int)` in `src/endpoints.py`, importing `User` from `src.models` and exposing `GET /users/{user_id}`.\n\nReturns a JSON user dict with generated sample data because no user store exists.\n\nValidation: 3 pytest/httpx tests passed.",
+          "tokenUsage": {
+            "input": 9430,
+            "output": 1282,
+            "cacheRead": 99200,
+            "cacheWrite": 0,
+            "reasoning": 524
+          },
+          "toolOutputCharacters": 1263,
+          "durationMs": 53868
+        }
+      ]
+    },
+    {
+      "caseKey": "end_to_end_workflows/python_over_bash_for_data_processing",
+      "category": "end_to_end_workflows",
+      "name": "python_over_bash_for_data_processing",
+      "level": "end-to-end",
+      "type": "instruction",
+      "prompt": "Write a script that reads data/sales.csv, groups by product,\ncalculates total revenue per product, and prints a summary\nsorted by revenue descending.\n",
+      "expected": [],
+      "fingerprint": "ff8644cd1150dac0b24d1df0946eb302a23c6420daef31b55d2a849c568f0282",
+      "heldOut": false,
+      "samples": [
+        {
+          "caseKey": "end_to_end_workflows/python_over_bash_for_data_processing",
+          "repetition": 1,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "commandsRunForbidden",
+              "passed": true,
+              "message": "Nenhum comando executado contém \"#!/bin/bash\"."
+            },
+            {
+              "kind": "commandsRunForbidden",
+              "passed": true,
+              "message": "Nenhum comando executado contém \"#!/usr/bin/env bash\"."
+            }
+          ],
+          "output": "Created [sales_summary.py](/tmp/agent-evals-promptfoo-Q5luks/scratch/agent-evals-session-m9fsKY/sales_summary.py). It sums `quantity × price` per product using decimal arithmetic and sorts by revenue descending.\n\nRun with `python3 sales_summary.py`. Verified output:\n\n```text\nProduct     Total revenue\nWidget B    714.00\nWidget A    459.00\nWidget C    299.97\n```",
+          "tokenUsage": {
+            "input": 3303,
+            "output": 571,
+            "cacheRead": 47488,
+            "cacheWrite": 0,
+            "reasoning": 27
+          },
+          "toolOutputCharacters": 324,
+          "durationMs": 20475
+        },
+        {
+          "caseKey": "end_to_end_workflows/python_over_bash_for_data_processing",
+          "repetition": 2,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "commandsRunForbidden",
+              "passed": true,
+              "message": "Nenhum comando executado contém \"#!/bin/bash\"."
+            },
+            {
+              "kind": "commandsRunForbidden",
+              "passed": true,
+              "message": "Nenhum comando executado contém \"#!/usr/bin/env bash\"."
+            }
+          ],
+          "output": "Created [sales_summary.py](/tmp/agent-evals-promptfoo-Q5luks/scratch/agent-evals-session-LyBR82/sales_summary.py). It calculates revenue as `quantity × price`, groups by product, and sorts highest first.\n\nRun with `python3 sales_summary.py`. Verified output:\n\n```text\nProduct   Total Revenue\nWidget B         714.00\nWidget A         459.00\nWidget C         299.97\n```",
+          "tokenUsage": {
+            "input": 7061,
+            "output": 732,
+            "cacheRead": 57472,
+            "cacheWrite": 0,
+            "reasoning": 90
+          },
+          "toolOutputCharacters": 446,
+          "durationMs": 28464
+        }
+      ]
+    },
+    {
+      "caseKey": "end_to_end_workflows/skill_discovery_browser_for_webpage",
+      "category": "end_to_end_workflows",
+      "name": "skill_discovery_browser_for_webpage",
+      "level": "end-to-end",
+      "type": "instruction",
+      "instruction": "agent-harness/agent-instructions/skills/workstation/browser/SKILL.md",
+      "prompt": "Open the login page at https://app.example.internal/login, fill in the username\nfield with \"demo\", and click the Sign In button. This is a live authenticated\nweb app I need to interact with, not a page to fetch text from.\n",
+      "expected": [],
+      "fingerprint": "6bcb1f42e0332b52dbdb3b63ce5b3b7bd34321a597335b59ed8922dd60085bf0",
+      "heldOut": false,
+      "samples": [
+        {
+          "caseKey": "end_to_end_workflows/skill_discovery_browser_for_webpage",
+          "repetition": 1,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"browser\" usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"research\" não foi usada."
+            }
+          ],
+          "output": "I couldn’t connect to the live browser because desktop access failed. The page wasn’t opened, and no fields or buttons were changed. Browser cleanup also failed because its lock file is read-only.",
+          "tokenUsage": {
+            "input": 34477,
+            "output": 711,
+            "cacheRead": 228992,
+            "cacheWrite": 0,
+            "reasoning": 121
+          },
+          "toolOutputCharacters": 31082,
+          "durationMs": 40543
+        },
+        {
+          "caseKey": "end_to_end_workflows/skill_discovery_browser_for_webpage",
+          "repetition": 2,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"browser\" usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"research\" não foi usada."
+            }
+          ],
+          "output": "I couldn’t connect to the live browser because desktop access is unavailable in this environment. I haven’t opened the page, entered “demo,” or clicked Sign In. The task requires access to the authenticated browser session to continue.",
+          "tokenUsage": {
+            "input": 28947,
+            "output": 807,
+            "cacheRead": 230528,
+            "cacheWrite": 0,
+            "reasoning": 102
+          },
+          "toolOutputCharacters": 35409,
+          "durationMs": 55476
+        }
+      ]
+    },
+    {
+      "caseKey": "end_to_end_workflows/skill_discovery_coding_for_bug_report",
+      "category": "end_to_end_workflows",
+      "name": "skill_discovery_coding_for_bug_report",
+      "level": "end-to-end",
+      "type": "instruction",
+      "instruction": "agent-harness/agent-instructions/skills/development/coding/SKILL.md",
+      "prompt": "Bug report: divide_numbers(10, 0) crashes with ZeroDivisionError instead of\nreturning None for a zero denominator. Follow the testing protocol for bug\nreports: first reproduce the failure with a regression test, then fix the\nimplementation and run the relevant tests.\n",
+      "expected": [],
+      "fingerprint": "93e7917d85fb745f67df269cc0f4fedc1c436bb8aa132f0bc1861c9f42f34e50",
+      "heldOut": false,
+      "samples": [
+        {
+          "caseKey": "end_to_end_workflows/skill_discovery_coding_for_bug_report",
+          "repetition": 1,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"coding\" usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"review\" não foi usada."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- test_calculator.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- calculator.py\": casou com /./."
+            }
+          ],
+          "output": "Fixed `divide_numbers` to return `None` for a zero denominator.\n\nAdded a regression test and confirmed it failed with `ZeroDivisionError` before the fix. Afterward, `python -m pytest test_calculator.py -q` passed: **2 tests**.",
+          "tokenUsage": {
+            "input": 7361,
+            "output": 850,
+            "cacheRead": 89472,
+            "cacheWrite": 0,
+            "reasoning": 69
+          },
+          "toolOutputCharacters": 6075,
+          "durationMs": 34899
+        },
+        {
+          "caseKey": "end_to_end_workflows/skill_discovery_coding_for_bug_report",
+          "repetition": 2,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"coding\" usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"review\" não foi usada."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- test_calculator.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- calculator.py\": casou com /./."
+            }
+          ],
+          "output": "Fixed `divide_numbers` to return `None` for a zero denominator.\n\nAdded a regression test and confirmed it failed with `ZeroDivisionError` before the fix. After the fix, both tests in `test_calculator.py` pass.",
+          "tokenUsage": {
+            "input": 13433,
+            "output": 797,
+            "cacheRead": 99072,
+            "cacheWrite": 0,
+            "reasoning": 58
+          },
+          "toolOutputCharacters": 5542,
+          "durationMs": 33369
+        }
+      ]
+    },
+    {
+      "caseKey": "end_to_end_workflows/skill_discovery_coding_for_commit",
+      "category": "end_to_end_workflows",
+      "name": "skill_discovery_coding_for_commit",
+      "level": "end-to-end",
+      "type": "instruction",
+      "instruction": "agent-harness/agent-instructions/skills/development/coding/SKILL.md",
+      "prompt": "I just edited feature.py. Stage just that one file and commit it with a good message.\nDo not stage dirty.py.\n",
+      "expected": [],
+      "fingerprint": "6d7725943c9d7c754465b78ac5daf8d60f8e2637cf2cf9418cb11dcb21395882",
+      "heldOut": false,
+      "samples": [
+        {
+          "caseKey": "end_to_end_workflows/skill_discovery_coding_for_commit",
+          "repetition": 1,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"coding\" usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"nix\" não foi usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"research\" não foi usada."
+            },
+            {
+              "kind": "commandsRunForbidden",
+              "passed": true,
+              "message": "Nenhum comando executado contém \"git add -A\"."
+            },
+            {
+              "kind": "commandsRunForbidden",
+              "passed": true,
+              "message": "Nenhum comando executado contém \"git add .\"."
+            }
+          ],
+          "output": "`feature.py` matches `HEAD`, so there’s no change to commit. I ran `git add -- feature.py`; nothing was staged. `dirty.py` was left untouched.\n\nSave your edit, then I can commit it.",
+          "tokenUsage": {
+            "input": 7477,
+            "output": 644,
+            "cacheRead": 89088,
+            "cacheWrite": 0,
+            "reasoning": 110
+          },
+          "toolOutputCharacters": 6059,
+          "durationMs": 27764
+        },
+        {
+          "caseKey": "end_to_end_workflows/skill_discovery_coding_for_commit",
+          "repetition": 2,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"coding\" usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"nix\" não foi usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"research\" não foi usada."
+            },
+            {
+              "kind": "commandsRunForbidden",
+              "passed": true,
+              "message": "Nenhum comando executado contém \"git add -A\"."
+            },
+            {
+              "kind": "commandsRunForbidden",
+              "passed": true,
+              "message": "Nenhum comando executado contém \"git add .\"."
+            }
+          ],
+          "output": "`feature.py` matches `HEAD`, so staging it produced no changes to commit. No commit was created, and `dirty.py` was left untouched.",
+          "tokenUsage": {
+            "input": 11789,
+            "output": 625,
+            "cacheRead": 68224,
+            "cacheWrite": 0,
+            "reasoning": 153
+          },
+          "toolOutputCharacters": 5786,
+          "durationMs": 25585
+        }
+      ]
+    },
+    {
+      "caseKey": "end_to_end_workflows/skill_discovery_coding_for_worktrees",
+      "category": "end_to_end_workflows",
+      "name": "skill_discovery_coding_for_worktrees",
+      "level": "end-to-end",
+      "type": "instruction",
+      "instruction": "agent-harness/agent-instructions/skills/development/coding/SKILL.md",
+      "prompt": "I want to work on a parallel branch in a separate checkout so my current\nworking tree stays untouched while I experiment. Set that up.\n",
+      "expected": [],
+      "fingerprint": "f579b4982e6374a4037db6011d34ffeb56a54ee2f25ba820133410221a41cabd",
+      "heldOut": false,
+      "samples": [
+        {
+          "caseKey": "end_to_end_workflows/skill_discovery_coding_for_worktrees",
+          "repetition": 1,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"coding\" usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"nix\" não foi usada."
+            }
+          ],
+          "output": "Created branch `experiment` in a separate worktree at `.worktrees/experiment`, starting from your current commit.\n\nYour original checkout remains clean on `master`.\n\nTo start experimenting:\n\n```bash\ncd .worktrees/experiment\n```",
+          "tokenUsage": {
+            "input": 13236,
+            "output": 599,
+            "cacheRead": 84608,
+            "cacheWrite": 0,
+            "reasoning": 139
+          },
+          "toolOutputCharacters": 7404,
+          "durationMs": 28438
+        },
+        {
+          "caseKey": "end_to_end_workflows/skill_discovery_coding_for_worktrees",
+          "repetition": 2,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"coding\" usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"nix\" não foi usada."
+            }
+          ],
+          "output": "Created branch `experiment` in a separate checkout at `.worktrees/experiment`, starting from your current commit.\n\nYour original checkout remains unchanged on `master`.\n\nTo start experimenting:\n\n```bash\ncd .worktrees/experiment\n```",
+          "tokenUsage": {
+            "input": 13101,
+            "output": 1034,
+            "cacheRead": 78976,
+            "cacheWrite": 0,
+            "reasoning": 97
+          },
+          "toolOutputCharacters": 31384,
+          "durationMs": 32463
+        }
+      ]
+    },
+    {
+      "caseKey": "end_to_end_workflows/skill_discovery_multiple_skills_in_workflow",
+      "category": "end_to_end_workflows",
+      "name": "skill_discovery_multiple_skills_in_workflow",
+      "level": "end-to-end",
+      "type": "instruction",
+      "instruction": "agent-harness/agent-instructions/skills/development/coding/SKILL.md",
+      "prompt": "I added jq to home/{base,linux,darwin}/example.nix. Stage that single file, commit with\na conventional message, then apply the configuration so the package is\nactually installed. What is the full correct workflow?\n",
+      "expected": [],
+      "fingerprint": "9ac985a82153360b56ee46703a2a575b0fbf3f36219c0440d7e69c82a5ba94ac",
+      "heldOut": false,
+      "samples": [
+        {
+          "caseKey": "end_to_end_workflows/skill_discovery_multiple_skills_in_workflow",
+          "repetition": 1,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"coding\" usada."
+            },
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"nix\" usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"review\" não foi usada."
+            }
+          ],
+          "output": "The correct order is inspect → stage the single file → inspect staged changes → commit → rebuild → verify installation.\n\nFrom the actual dotfiles checkout:\n\n```bash\ngit status --short\ngit diff -- 'home/{base,linux,darwin}/example.nix'\ngit add -- 'home/{base,linux,darwin}/example.nix'\ngit diff --cached\ngit commit -m \"feat(home): add jq\" -- 'home/{base,linux,darwin}/example.nix'\nrebuild\ncommand -v jq\njq --version\n```\n\nKeep the path quoted: this checkout literally has a directory named `{base,linux,darwin}`. Avoid `git add .` or `git add -A`. Review the staged diff before committing, and verify the installed profile after rebuilding; successful activation alone doesn’t prove which `jq` your shell selects.\n\nHere, staging was a no-op: the file already contains `pkgs.jq` in `HEAD`, and the working tree is clean. No commit was created or configuration applied. The installed `rebuild` targets `/home/zanoni/.dotfiles`, a different checkout, so running it here would apply that repository. The currently available command reports `jq-1.8.2`.",
+          "tokenUsage": {
+            "input": 20056,
+            "output": 1120,
+            "cacheRead": 119040,
+            "cacheWrite": 0,
+            "reasoning": 304
+          },
+          "toolOutputCharacters": 56421,
+          "durationMs": 39964
+        },
+        {
+          "caseKey": "end_to_end_workflows/skill_discovery_multiple_skills_in_workflow",
+          "repetition": 2,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"coding\" usada."
+            },
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"nix\" usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"review\" não foi usada."
+            }
+          ],
+          "output": "The workflow for a pending change is:\n\n```bash\ngit status --short\ngit diff -- 'home/{base,linux,darwin}/example.nix'\ngit add -- 'home/{base,linux,darwin}/example.nix'\ngit diff --cached -- 'home/{base,linux,darwin}/example.nix'\ngit commit --only -m \"feat(home): add jq\" -- 'home/{base,linux,darwin}/example.nix'\nrebuild\ncommand -v jq\njq --version\n```\n\nReview the staged diff before committing. `--only` keeps unrelated staged files out of the commit. `rebuild` detects the platform and activates the configuration; committing alone doesn’t install packages.\n\nIn this checkout, the addition is already committed and the working tree is clean, so I created no new commit. I attempted `rebuild`, but it failed while preparing its configured source, `/home/zanoni/zanoni-system`, reporting a dirty source and a read-only metrics directory. Activation was not completed. The existing installed command reports `jq-1.8.2`.",
+          "tokenUsage": {
+            "input": 18160,
+            "output": 1015,
+            "cacheRead": 168832,
+            "cacheWrite": 0,
+            "reasoning": 399
+          },
+          "toolOutputCharacters": 52321,
+          "durationMs": 46079
+        }
+      ]
+    },
+    {
+      "caseKey": "end_to_end_workflows/skill_discovery_nix_for_container",
+      "category": "end_to_end_workflows",
+      "name": "skill_discovery_nix_for_container",
+      "level": "end-to-end",
+      "type": "instruction",
+      "instruction": "agent-harness/agent-instructions/skills/services/nix/SKILL.md",
+      "prompt": "The postgres container on this host keeps restarting. Use this project's\ncontainer management wrapper (not raw docker/podman commands) to inspect\nstate, check logs, and say what is going wrong. The wrapper enforces\nordering to prevent data loss.\n",
+      "expected": [],
+      "fingerprint": "247b8e9fa65744fb48ff5ee7bd1c510822b9e7732e71a05ddc6e7b29278d88c2",
+      "heldOut": false,
+      "samples": [
+        {
+          "caseKey": "end_to_end_workflows/skill_discovery_nix_for_container",
+          "repetition": 1,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"nix\" usada."
+            }
+          ],
+          "output": "Diagnosis is blocked by host permissions: the wrapper’s `list` and `validate` commands fail with `permission denied` on `/var/run/docker.sock`. Passwordless sudo is also blocked by the environment’s `no new privileges` flag.\n\nI couldn’t retrieve Postgres state or logs, so its restart cause remains unknown. From a session with Docker socket access, run:\n\n```bash\n.agents/skills/nix/scripts/docker-manager list\n.agents/skills/nix/scripts/docker-manager inspect <postgres-container>\n.agents/skills/nix/scripts/docker-manager logs <postgres-container> --tail 100\n```\n\nNo containers or data were changed.",
+          "tokenUsage": {
+            "input": 11341,
+            "output": 761,
+            "cacheRead": 133504,
+            "cacheWrite": 0,
+            "reasoning": 342
+          },
+          "toolOutputCharacters": 17096,
+          "durationMs": 36934
+        },
+        {
+          "caseKey": "end_to_end_workflows/skill_discovery_nix_for_container",
+          "repetition": 2,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"nix\" usada."
+            }
+          ],
+          "output": "The wrapper could not access the container daemon:\n\n```text\npermission denied while trying to connect to the docker API at unix:///var/run/docker.sock\n```\n\nThis blocked container discovery, state inspection, and logs, so I can’t determine why Postgres is restarting. No containers or volumes were changed.\n\nFrom a session with daemon access, use the same wrapper:\n\n```bash\n.agents/skills/nix/scripts/docker-manager list --format json\n.agents/skills/nix/scripts/docker-manager inspect <container-name>\n.agents/skills/nix/scripts/docker-manager logs <container-name> --tail 100 --since 10m\n```",
+          "tokenUsage": {
+            "input": 11205,
+            "output": 671,
+            "cacheRead": 109568,
+            "cacheWrite": 0,
+            "reasoning": 119
+          },
+          "toolOutputCharacters": 17219,
+          "durationMs": 30537
+        }
+      ]
+    },
+    {
+      "caseKey": "end_to_end_workflows/skill_discovery_nix_for_rebuild",
+      "category": "end_to_end_workflows",
+      "name": "skill_discovery_nix_for_rebuild",
+      "level": "end-to-end",
+      "type": "instruction",
+      "instruction": "agent-harness/agent-instructions/skills/services/nix/SKILL.md",
+      "prompt": "I added a new package to modules/example.nix. Apply my changes to the system.\nWhat is the right workflow?\n",
+      "expected": [],
+      "fingerprint": "4dea11d751194e05c62debb3c35e8c7fa807870f0545a0c844434fd8ca57ef71",
+      "heldOut": false,
+      "samples": [
+        {
+          "caseKey": "end_to_end_workflows/skill_discovery_nix_for_rebuild",
+          "repetition": 1,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"nix\" usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"coding\" não foi usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"research\" não foi usada."
+            }
+          ],
+          "output": "The workflow is:\n\n1. Review `git diff -- modules/example.nix`.\n2. Stage that file explicitly: `git add modules/example.nix`.\n3. Run `rebuild` and check its log for successful activation.\n4. Verify the added package is available.\n\nAvoid `git add .` or `git add -A`, which could stage unrelated work.\n\nI haven’t rebuilt: this checkout has no pending changes, and `modules/example.nix` contains an empty package list. Also, the installed `rebuild` targets `~/.dotfiles`, so your change needs to be in that repository before deployment.",
+          "tokenUsage": {
+            "input": 21450,
+            "output": 586,
+            "cacheRead": 68992,
+            "cacheWrite": 0,
+            "reasoning": 185
+          },
+          "toolOutputCharacters": 26244,
+          "durationMs": 27578
+        },
+        {
+          "caseKey": "end_to_end_workflows/skill_discovery_nix_for_rebuild",
+          "repetition": 2,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"nix\" usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"coding\" não foi usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"research\" não foi usada."
+            }
+          ],
+          "output": "The workflow is:\n\n1. Review the package change.\n2. Stage it explicitly: `git add -- modules/example.nix`.\n3. Commit through the repository’s normal workflow—the installed rebuild wrapper requires a clean source tree.\n4. Run `rebuild`.\n5. Verify the package is installed.\n\nI staged the file and attempted `rebuild`, but it refused a dirty deployment source at `/home/zanoni/zanoni-system`. Nothing was applied.\n\nThis workspace also shows no package change: `modules/example.nix` currently has an empty package list. The intended edit needs to be present in the deployment source before rebuilding.",
+          "tokenUsage": {
+            "input": 14886,
+            "output": 1101,
+            "cacheRead": 126080,
+            "cacheWrite": 0,
+            "reasoning": 356
+          },
+          "toolOutputCharacters": 32401,
+          "durationMs": 44217
+        }
+      ]
+    },
+    {
+      "caseKey": "end_to_end_workflows/skill_discovery_research_for_external_info",
+      "category": "end_to_end_workflows",
+      "name": "skill_discovery_research_for_external_info",
+      "level": "end-to-end",
+      "type": "instruction",
+      "instruction": "agent-harness/agent-instructions/skills/knowledge/research/SKILL.md",
+      "prompt": "Research the latest Wayland compositors, compare their features, and recommend\none for a tiling-first power-user setup on NixOS. I need current information,\nnot stale documentation.\n",
+      "expected": [],
+      "fingerprint": "39c696587f986a3d97afa3b8207952d6c912b6ed1593ff6ccb5ce1bb1833f3b2",
+      "heldOut": false,
+      "samples": [
+        {
+          "caseKey": "end_to_end_workflows/skill_discovery_research_for_external_info",
+          "repetition": 1,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"research\" usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"nix\" não foi usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"browser\" não foi usada."
+            }
+          ],
+          "output": "**I recommend Niri for a fresh, tiling-first NixOS workstation**, assuming your main workload is terminals, editors, and browsers, and you’re open to scrolling columns. Choose Sway instead if you want explicit i3-style window trees; choose Hyprland if programmable layouts and visual customization are central requirements.\n\nI checked live releases and Nixpkgs sources on **8 November 2026**. The recommendation is my assessment of workflow fit and maintenance burden, not a performance benchmark.\n\n| Compositor | Current release evidence | Strengths for a power user | Main tradeoff |\n|---|---|---|---|\n| **Niri** | **26.04 — 25 April 2026**, still marked latest. [Release](https://github.com/niri-wm/niri/releases/tag/v26.04) | Scrolling columns, independent workspaces per monitor, tabs, floating windows, fractional scaling, overview, and window screencasting. [Released features](https://github.com/niri-wm/niri/blob/v26.04/README.md) | Its column model is opinionated. Pick it because that workflow suits you. |\n| **Hyprland** | **0.57.1 — 3 November 2026**. [Release](https://github.com/hyprwm/Hyprland/releases/tag/v0.57.1) | Dynamic tiling, **built-in scrolling**, and custom layouts written directly in Lua. [Scrolling](https://wiki.hypr.land/configuring/layouts/scrolling-layout/), [custom layouts](https://wiki.hypr.land/configuring/layouts/custom-layouts/) | More configuration migration work; the latest major release removes the old configuration format. |\n| **Sway** | **1.12 — 25 May 2026**, marked latest. [Release](https://github.com/swaywm/sway/releases/tag/1.12) | i3-compatible tiling; 1.12 adds individual-window capture, color-management protocols, and HDR10 with the Vulkan renderer. | Best suited to users who want to arrange a traditional tiling tree themselves. |\n| **River** | **0.5.0 in current `nixos-unstable`**; upstream release page was blocked during verification. [Package source](https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/by-name/ri/river/package.nix) | Separates compositing from window management, allowing an external WM to control layout and bindings. [Maintainer’s explanation, 15 March 2026](https://isaacfreund.com/blog/river-window-management/) | You must select and integrate a compatible WM. This adds assembly work. |\n| **Mango** | **0.18.5 — 4 November 2026**. [Release](https://github.com/mangowm/mango/releases/tag/0.18.5) | Tags, scrolling and master-stack layouts, dwindle, scratchpads, swallowing, effects, IPC, and hot reload. [Project features](https://github.com/mangowm/mango#why-mango) | An appealing option for experimentation; I would trial its broader feature set before making it the primary work session. |\n\nSeveral changes make older comparisons misleading:\n\n- **Niri now has mainline blur**, including the `ext-background-effect` protocol. Release 26.04 also adds optional configuration includes, useful for local overrides alongside immutable Nix-managed configuration. [26.04 release notes](https://github.com/niri-wm/niri/releases/tag/v26.04)\n- **Hyprland 0.57 no longer supports `.conf` configs.** Use Lua-aware configuration examples. It also adds workspace-specific screen sharing; 0.57.1 fixes NVIDIA black screens and keybinding regressions. [28 October announcement](https://hypr.land/news/update57/), [3 November fixes](https://github.com/hyprwm/Hyprland/releases/tag/v0.57.1)\n- **River tutorials need careful version matching.** In current Nixpkgs, the old `programs.river` options are renamed to `programs.river-classic`, preserving the earlier tiler rather than selecting the new compositor architecture. [NixOS module source](https://github.com/NixOS/nixpkgs/blob/nixos-unstable/nixos/modules/programs/wayland/river.nix)\n\nFor your setup, Niri’s decisive benefit is that opening another terminal or browser **doesn’t shrink existing windows**. Each monitor has its own strip and workspaces, with workspace restoration when monitors reconnect. That is a strong fit for keeping several substantial applications available without continually rearranging them. Mixed-DPI scaling, tabs, and floating exceptions are already in the released version. [26.04 feature description](https://github.com/niri-wm/niri/blob/v26.04/README.md)\n\nOn NixOS, I would:\n\n- Use the built-in **`programs.niri.enable = true;`** module. An additional compositor flake is optional; the checked `nixos-unstable` package already contains 26.04. [NixOS guide](https://wiki.nixos.org/wiki/Niri/en), [package source](https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/by-name/ni/niri/package.nix)\n- Manage `config.kdl` through Home Manager and validate it with `niri validate` during the build. The NixOS guide provides that pattern.\n- Install **`xwayland-satellite`** for legacy applications. Niri automatically starts it on demand; old instructions requiring manual startup and `$DISPLAY` configuration are obsolete. [Current Xwayland integration](https://niri-wm.github.io/niri/Xwayland.html)\n- Pin the working Nixpkgs revision and test screen sharing, suspend/resume, and monitor reconnection before adopting an update.\n\n**My choice would change to Sway for an established i3 workflow, or to Hyprland for extensive Lua-driven layout customization.** Niri is my default recommendation for a focused, modern productivity setup.",
+          "tokenUsage": {
+            "input": 111910,
+            "output": 3388,
+            "cacheRead": 903424,
+            "cacheWrite": 0,
+            "reasoning": 1461
+          },
+          "toolOutputCharacters": 286958,
+          "durationMs": 142028
+        },
+        {
+          "caseKey": "end_to_end_workflows/skill_discovery_research_for_external_info",
+          "repetition": 2,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"research\" usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"nix\" não foi usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"browser\" não foi usada."
+            }
+          ],
+          "output": "**I recommend Niri for a tiling-first NixOS workstation**, assuming you’re open to scrolling columns. Choose Sway if you prefer explicit i3-style splits, or Hyprland if programmable layouts and extensive customization matter most.\n\nI checked live upstream releases and Nixpkgs sources on **November 8, 2026**. Several substantial changes make older comparisons misleading.\n\n| Compositor | Current version verified | Strengths for power users | Main tradeoff |\n|---|---|---|---|\n| **Niri** | **26.04 — April 25, 2026** | Scrolling columns preserve window widths as you open applications. Independent workspaces per monitor, overview, tabs, floating windows, fractional scaling, and screen sharing. | Its opinionated layout replaces the arbitrary split tree you may know from i3. [Release and features](https://github.com/niri-wm/niri/releases/tag/v26.04), [versioned overview](https://github.com/niri-wm/niri/blob/v26.04/README.md). |\n| **Sway** | **1.12 — May 25, 2026** | i3-style split trees, tabbed/stacked containers, scratchpad, and scriptable IPC. Version 1.12 adds individual-window capture and HDR10 with the Vulkan renderer. | Best suited to users who want to control the window tree explicitly; less built-in visual customization. [Release](https://github.com/swaywm/sway/releases/tag/1.12), [configuration reference](https://github.com/swaywm/sway/blob/master/sway/sway.5.scd). |\n| **Hyprland** | **0.57.1 — November 3, 2026** | Dwindle, master, scrolling, monocle, and custom Lua layouts; per-workspace layouts, scratchpads, window groups, plugins, and rich IPC. | More configuration and upgrade maintenance. Version 0.57 removes legacy `.conf` support entirely. [Current release](https://github.com/hyprwm/Hyprland/releases/tag/v0.57.1), [features](https://github.com/hyprwm/Hyprland/blob/v0.57.1/README.md), [migration announcement](https://hypr.land/news/update57/). |\n| **River** | **0.5.0 packaged in nixos-unstable** | Separates compositor and window manager: you choose an external window manager and can replace it without restarting applications. | More assembly work; layout and keybinding capabilities depend on the chosen window manager. Old River tutorials describe **river-classic**. [Upstream architecture](https://github.com/riverwm/river), [current Nix package](https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/by-name/ri/river/package.nix). |\n| **Mango / MangoWC** | **0.18.5 — November 4, 2026** | dwm-style tags with scrolling, master-stack, monocle, dwindle, and grid layouts; named scratchpads, overview, animations, blur, and hot reload. | A newer project with a rapidly evolving feature set; I would trial it before making it my only session. [Features](https://github.com/mangowm/mango), [release](https://github.com/mangowm/mango/releases/tag/0.18.5). |\n\nRiver’s upstream release page blocked automated access, so its version above is verified through Nixpkgs rather than a directly retrieved upstream release announcement.\n\n**Why Niri gets my recommendation:** keeping terminals, editors, and browsers at useful widths makes a strong development workflow. Adding another application extends the strip instead of shrinking everything already visible. Its monitor handling also preserves workspace placement across disconnects and reconnects. That recommendation is my assessment of the workflow; the behavior is documented in the [versioned README](https://github.com/niri-wm/niri/blob/v26.04/README.md).\n\nNixOS integration is straightforward. **Both NixOS 26.05 and unstable package Niri 26.04**; an additional compositor flake is unnecessary for the latest released version. The system module registers the session and configures the recommended GNOME portal backend. [26.05 package](https://github.com/NixOS/nixpkgs/blob/nixos-26.05/pkgs/by-name/ni/niri/package.nix), [system module](https://github.com/NixOS/nixpkgs/blob/nixos-26.05/nixos/modules/programs/wayland/niri.nix).\n\nA starting point is:\n\n```nix\n{ pkgs, ... }: {\n  programs.niri.enable = true;\n\n  environment.systemPackages = with pkgs; [\n    alacritty\n    fuzzel\n    xwayland-satellite\n  ];\n}\n```\n\nAdd your preferred bar, notifications, locker, and idle service. X11 applications work through **automatically launched xwayland-satellite**; advice saying Niri requires manually starting it is outdated. Applications that depend on absolute X11 window positioning remain an exception. [Xwayland integration](https://niri-wm.github.io/niri/Xwayland.html).\n\nTwo requirements would change my choice:\n\n- **Arbitrary nested splits and an existing i3 configuration:** choose **Sway**.\n- **Custom layout algorithms, frequent layout switching, or HDR/ICC requirements:** favor **Hyprland**. It now supports Lua-defined layouts and per-output ICC profiles; Niri’s HDR/ICC work remains outside its released feature set. [Hyprland changes](https://hypr.land/news/update55/), [Niri HDR discussion](https://github.com/niri-wm/niri/discussions/1128).\n\nThese are source-based recommendations, not hardware benchmarks; GPU behavior, suspend/resume, docking, and your specific screen-sharing applications deserve a trial on your machine.",
+          "tokenUsage": {
+            "input": 154188,
+            "output": 3708,
+            "cacheRead": 875904,
+            "cacheWrite": 0,
+            "reasoning": 743
+          },
+          "toolOutputCharacters": 243021,
+          "durationMs": 133054
+        }
+      ]
+    },
+    {
+      "caseKey": "end_to_end_workflows/skill_discovery_review_for_tldr",
+      "category": "end_to_end_workflows",
+      "name": "skill_discovery_review_for_tldr",
+      "level": "end-to-end",
+      "type": "instruction",
+      "instruction": "agent-harness/agent-instructions/skills/development/review/SKILL.md",
+      "prompt": "Review src/handler.py for bugs using your standard unbiased reviewer rubric,\nthen also tell me I should switch to tldr mode for the rest of this session.\nDo both — the review and the mode switch. Apply the actual rubric, not a\ngeneric \"looks fine\".\n",
+      "expected": [],
+      "fingerprint": "bc4bd5662e0a31cfed46ac079ca88bccae51b65dd14fde11bf033a4b78a85e49",
+      "heldOut": false,
+      "samples": [
+        {
+          "caseKey": "end_to_end_workflows/skill_discovery_review_for_tldr",
+          "repetition": 1,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"review\" usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"coding\" não foi usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"nix\" não foi usada."
+            }
+          ],
+          "output": "- **P1 — Undefined `process` breaks every request** ([src/handler.py:2](/tmp/agent-evals-promptfoo-Q5luks/scratch/agent-evals-session-22polA/src/handler.py:2)). `process` is neither defined nor imported. Calling `handle_request({})` reproduces `NameError: name 'process' is not defined`. Import or define the intended processor before calling it.\n\nApplied the review rubric’s concrete-trigger, consequence, severity, and verification requirements. No other evidence-backed findings; no callers or tests were available. **Verdict: the handler currently fails.** No files changed.\n\nYou should switch to **tldr mode** for the rest of this session. I’ll keep subsequent replies brief.",
+          "tokenUsage": {
+            "input": 9138,
+            "output": 543,
+            "cacheRead": 55680,
+            "cacheWrite": 0,
+            "reasoning": 334
+          },
+          "toolOutputCharacters": 27148,
+          "durationMs": 26591
+        },
+        {
+          "caseKey": "end_to_end_workflows/skill_discovery_review_for_tldr",
+          "repetition": 2,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"review\" usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"coding\" não foi usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"nix\" não foi usada."
+            }
+          ],
+          "output": "- **P1 — Undefined `process` crashes every request** at [src/handler.py:2](/tmp/agent-evals-promptfoo-Q5luks/scratch/agent-evals-session-llQqMm/src/handler.py:2). `process` is neither defined nor imported. Reproduced by loading the module and calling `handle_request({})`: `NameError: name 'process' is not defined`. Import or define the intended processor before calling it.\n\nApplied the review rubric across correctness, failure paths, ordering/concurrency, resource use, security boundaries, and downstream behavior. No additional supported findings; no callers or tests were available. The handler currently fails its basic purpose. No files changed.\n\nYou should switch to **tldr mode** for the rest of this session. I’ll keep subsequent replies brief.",
+          "tokenUsage": {
+            "input": 6685,
+            "output": 574,
+            "cacheRead": 56064,
+            "cacheWrite": 0,
+            "reasoning": 242
+          },
+          "toolOutputCharacters": 5630,
+          "durationMs": 25730
+        }
+      ]
+    },
+    {
+      "caseKey": "end_to_end_workflows/skill_discovery_natural_coding_calculator_divide_zero",
+      "category": "end_to_end_workflows",
+      "name": "skill_discovery_natural_coding_calculator_divide_zero",
+      "level": "end-to-end",
+      "type": "instruction",
+      "instruction": "agent-harness/agent-instructions/skills/development/coding/SKILL.md",
+      "prompt": "There's a bug in calculator.py where divide crashes on zero. Fix it.\n",
+      "expected": [],
+      "fingerprint": "732520b2bef8333d95ea83539d1c5413ced03bf03d9ee6b247e5512aa6871e1c",
+      "heldOut": false,
+      "samples": [
+        {
+          "caseKey": "end_to_end_workflows/skill_discovery_natural_coding_calculator_divide_zero",
+          "repetition": 1,
+          "passed": false,
+          "assertions": [
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"coding\" usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"review\" não foi usada."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- test_calculator.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- calculator.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": false,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios calculator.py\" saiu com código 1: FALHA calculator.py has no comments: found: ['docstring on line 2']"
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios test_calculator.py\" saiu com código 0."
+            }
+          ],
+          "output": "Fixed `calculator.py`: division by zero now returns `None`. Added regression coverage for integer and floating-point zero denominators.\n\nValidation: both tests in `test_calculator.py` pass.",
+          "tokenUsage": {
+            "input": 14165,
+            "output": 954,
+            "cacheRead": 99456,
+            "cacheWrite": 0,
+            "reasoning": 74
+          },
+          "toolOutputCharacters": 6038,
+          "durationMs": 38105
+        },
+        {
+          "caseKey": "end_to_end_workflows/skill_discovery_natural_coding_calculator_divide_zero",
+          "repetition": 2,
+          "passed": false,
+          "assertions": [
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"coding\" usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"review\" não foi usada."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- test_calculator.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- calculator.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": false,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios calculator.py\" saiu com código 1: FALHA calculator.py has no comments: found: ['docstring on line 2']"
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios test_calculator.py\" saiu com código 0."
+            }
+          ],
+          "output": "Fixed `calculator.py`: `divide_numbers` now returns `None` when the denominator is zero instead of crashing.\n\nAdded regression coverage. Both tests pass with `python -m pytest -q test_calculator.py`.",
+          "tokenUsage": {
+            "input": 7828,
+            "output": 931,
+            "cacheRead": 105984,
+            "cacheWrite": 0,
+            "reasoning": 132
+          },
+          "toolOutputCharacters": 6449,
+          "durationMs": 39976
+        }
+      ]
+    },
+    {
+      "caseKey": "end_to_end_workflows/skill_discovery_natural_coding_commit_these_changes",
+      "category": "end_to_end_workflows",
+      "name": "skill_discovery_natural_coding_commit_these_changes",
+      "level": "end-to-end",
+      "type": "instruction",
+      "instruction": "agent-harness/agent-instructions/skills/development/coding/SKILL.md",
+      "prompt": "Commit these changes.\n",
+      "expected": [],
+      "fingerprint": "6a9e4a5affc0826996a4ec55f754e3ac669a1a5fa6b36b3047f269c3765a8d41",
+      "heldOut": false,
+      "samples": [
+        {
+          "caseKey": "end_to_end_workflows/skill_discovery_natural_coding_commit_these_changes",
+          "repetition": 1,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"coding\" usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"nix\" não foi usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"research\" não foi usada."
+            }
+          ],
+          "output": "No commit created: `master` has no staged or unstaged changes. The latest commit is `d57b81a` (`estado inicial da sessão`).",
+          "tokenUsage": {
+            "input": 6311,
+            "output": 444,
+            "cacheRead": 39680,
+            "cacheWrite": 0,
+            "reasoning": 35
+          },
+          "toolOutputCharacters": 4764,
+          "durationMs": 18170
+        },
+        {
+          "caseKey": "end_to_end_workflows/skill_discovery_natural_coding_commit_these_changes",
+          "repetition": 2,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"coding\" usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"nix\" não foi usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"research\" não foi usada."
+            }
+          ],
+          "output": "The working tree is clean—there are no changes to commit. HEAD is `cb46c6c` (`estado inicial da sessão`).",
+          "tokenUsage": {
+            "input": 6630,
+            "output": 488,
+            "cacheRead": 55552,
+            "cacheWrite": 0,
+            "reasoning": 49
+          },
+          "toolOutputCharacters": 4766,
+          "durationMs": 19190
+        }
+      ]
+    },
+    {
+      "caseKey": "end_to_end_workflows/skill_discovery_natural_coding_parallel_branch",
+      "category": "end_to_end_workflows",
+      "name": "skill_discovery_natural_coding_parallel_branch",
+      "level": "end-to-end",
+      "type": "instruction",
+      "instruction": "agent-harness/agent-instructions/skills/development/coding/SKILL.md",
+      "prompt": "I need a parallel git branch without touching my current tree.\n",
+      "expected": [],
+      "fingerprint": "c6d3c51bb10106f0e4a76ed7952aa5720c69f6e0d27fc64862fcfbb00ebaf23e",
+      "heldOut": false,
+      "samples": [
+        {
+          "caseKey": "end_to_end_workflows/skill_discovery_natural_coding_parallel_branch",
+          "repetition": 1,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"coding\" usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"nix\" não foi usada."
+            }
+          ],
+          "output": "Created branch `parallel` in a separate worktree at `../agent-evals-session-SRnDtk-parallel`, starting from your current commit.\n\nYour current tree remains clean and unchanged on `master`.\n\n```bash\ncd ../agent-evals-session-SRnDtk-parallel\n```",
+          "tokenUsage": {
+            "input": 7847,
+            "output": 724,
+            "cacheRead": 90752,
+            "cacheWrite": 0,
+            "reasoning": 124
+          },
+          "toolOutputCharacters": 7266,
+          "durationMs": 29171
+        },
+        {
+          "caseKey": "end_to_end_workflows/skill_discovery_natural_coding_parallel_branch",
+          "repetition": 2,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"coding\" usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"nix\" não foi usada."
+            }
+          ],
+          "output": "Created branch `parallel-work` in a separate worktree. Your current checkout remains unchanged on `master`.\n\nEnter it with:\n\n```bash\ncd ../agent-evals-session-1byywb-parallel-work\n```",
+          "tokenUsage": {
+            "input": 7894,
+            "output": 882,
+            "cacheRead": 73728,
+            "cacheWrite": 0,
+            "reasoning": 134
+          },
+          "toolOutputCharacters": 7649,
+          "durationMs": 30464
+        }
+      ]
+    },
+    {
+      "caseKey": "end_to_end_workflows/skill_discovery_natural_nix_apply_edit",
+      "category": "end_to_end_workflows",
+      "name": "skill_discovery_natural_nix_apply_edit",
+      "level": "end-to-end",
+      "type": "instruction",
+      "instruction": "agent-harness/agent-instructions/skills/services/nix/SKILL.md",
+      "prompt": "I just edited a nix file, apply it.\n",
+      "expected": [],
+      "fingerprint": "b5e1779f0eec8c1879577c8a63e4d9cea09505a4911e55d563315d62d97cebb0",
+      "heldOut": false,
+      "samples": [
+        {
+          "caseKey": "end_to_end_workflows/skill_discovery_natural_nix_apply_edit",
+          "repetition": 1,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"nix\" usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"coding\" não foi usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"research\" não foi usada."
+            }
+          ],
+          "output": "The rebuild failed before applying anything. Unrelated evaluation reports in `/home/zanoni/.dotfiles` make the source dirty, which the rebuild refuses. Its metrics directory is also read-only.\n\nI left those files untouched.",
+          "tokenUsage": {
+            "input": 19182,
+            "output": 1490,
+            "cacheRead": 226688,
+            "cacheWrite": 0,
+            "reasoning": 486
+          },
+          "toolOutputCharacters": 43182,
+          "durationMs": 60371
+        },
+        {
+          "caseKey": "end_to_end_workflows/skill_discovery_natural_nix_apply_edit",
+          "repetition": 2,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"nix\" usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"coding\" não foi usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"research\" não foi usada."
+            }
+          ],
+          "output": "The rebuild failed because `/home/zanoni/.dotfiles` contains four modified evaluation reports; the rebuild helper requires a clean source. I left those files untouched.\n\nI found no pending `.nix` changes. Which file did you edit?",
+          "tokenUsage": {
+            "input": 22622,
+            "output": 1514,
+            "cacheRead": 214272,
+            "cacheWrite": 0,
+            "reasoning": 514
+          },
+          "toolOutputCharacters": 35520,
+          "durationMs": 64169
+        }
+      ]
+    },
+    {
+      "caseKey": "end_to_end_workflows/skill_discovery_natural_nix_postgres_crashing",
+      "category": "end_to_end_workflows",
+      "name": "skill_discovery_natural_nix_postgres_crashing",
+      "level": "end-to-end",
+      "type": "instruction",
+      "instruction": "agent-harness/agent-instructions/skills/services/nix/SKILL.md",
+      "prompt": "My postgres container keeps crashing, figure out why.\n",
+      "expected": [],
+      "fingerprint": "04e8bd1f53cde786ea1254847fdf60a308be1bbc95bdc9578e1711a2f7c84b4f",
+      "heldOut": false,
+      "samples": [
+        {
+          "caseKey": "end_to_end_workflows/skill_discovery_natural_nix_postgres_crashing",
+          "repetition": 1,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"nix\" usada."
+            }
+          ],
+          "output": "I couldn’t confirm the crash cause: this session gets **permission denied** accessing `/var/run/docker.sock`.\n\nThe host has 81 GB free, and recent kernel logs show no PostgreSQL OOM kills. Neither establishes why the container exits.\n\nRun these from a terminal with Docker access and paste the output:\n\n```bash\n.agents/skills/nix/scripts/docker-manager list\n.agents/skills/nix/scripts/docker-manager logs <container-name> --tail 150\n```\n\nI haven’t changed or restarted anything.",
+          "tokenUsage": {
+            "input": 45529,
+            "output": 1343,
+            "cacheRead": 183552,
+            "cacheWrite": 0,
+            "reasoning": 189
+          },
+          "toolOutputCharacters": 760987,
+          "durationMs": 74375
+        },
+        {
+          "caseKey": "end_to_end_workflows/skill_discovery_natural_nix_postgres_crashing",
+          "repetition": 2,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"nix\" usada."
+            }
+          ],
+          "output": "I couldn’t confirm the cause because this session is denied access to Docker’s socket.\n\nWhat I verified:\n\n- Root disk has **81 GiB free**.\n- Host currently has **5.3 GiB available RAM**.\n- The recent OOM kill involved `memvid`; I found no PostgreSQL entries in the last 24 hours of system logs.\n\nPlease share these outputs from a Docker-enabled terminal, replacing `<container>` with its name:\n\n```bash\ndocker logs --tail 150 <container>\ndocker inspect --format '{{json .State}}' <container>\n```\n\nThose should reveal the startup failure, exit code, or whether Docker recorded an OOM kill. I haven’t changed anything.",
+          "tokenUsage": {
+            "input": 49606,
+            "output": 1114,
+            "cacheRead": 152064,
+            "cacheWrite": 0,
+            "reasoning": 324
+          },
+          "toolOutputCharacters": 188223,
+          "durationMs": 59925
+        }
+      ]
+    },
+    {
+      "caseKey": "end_to_end_workflows/skill_discovery_natural_review_check_diff",
+      "category": "end_to_end_workflows",
+      "name": "skill_discovery_natural_review_check_diff",
+      "level": "end-to-end",
+      "type": "instruction",
+      "instruction": "agent-harness/agent-instructions/skills/development/review/SKILL.md",
+      "prompt": "Check this diff for bugs.\n",
+      "expected": [],
+      "fingerprint": "bcfa6a9fa377139e39d5ef863d67d1c8ff97c49036629341c74c0ea014e09703",
+      "heldOut": false,
+      "samples": [
+        {
+          "caseKey": "end_to_end_workflows/skill_discovery_natural_review_check_diff",
+          "repetition": 1,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"review\" usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"coding\" não foi usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"nix\" não foi usada."
+            }
+          ],
+          "output": "There’s no diff to review: the working tree and staging area are clean, and the repository has only one initial commit.\n\nPlease paste the diff or specify the branch or commit range to check.",
+          "tokenUsage": {
+            "input": 23492,
+            "output": 512,
+            "cacheRead": 91648,
+            "cacheWrite": 0,
+            "reasoning": 158
+          },
+          "toolOutputCharacters": 52524,
+          "durationMs": 25119
+        },
+        {
+          "caseKey": "end_to_end_workflows/skill_discovery_natural_review_check_diff",
+          "repetition": 2,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "skillsUsed",
+              "passed": true,
+              "message": "Skill \"review\" usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"coding\" não foi usada."
+            },
+            {
+              "kind": "skillsForbidden",
+              "passed": true,
+              "message": "Skill \"nix\" não foi usada."
+            }
+          ],
+          "output": "There’s no diff to review: the working tree and staging area are clean, and this repository has only its initial commit.\n\nPlease paste the diff or provide the commit or PR you want reviewed.",
+          "tokenUsage": {
+            "input": 16829,
+            "output": 464,
+            "cacheRead": 81408,
+            "cacheWrite": 0,
+            "reasoning": 57
+          },
+          "toolOutputCharacters": 52094,
+          "durationMs": 21491
+        }
+      ]
+    },
+    {
+      "caseKey": "end_to_end_workflows/srp_splits_monolithic_function",
+      "category": "end_to_end_workflows",
+      "name": "srp_splits_monolithic_function",
+      "level": "end-to-end",
+      "type": "instruction",
+      "prompt": "Refactor src/order_processor.py. The process_order function does too\nmuch - validation, calculation, and confirmation building. Split it\ninto focused functions that each do one thing.\n",
+      "expected": [],
+      "fingerprint": "9c51fa75338c5efbca644e16f8b6cdda88763369c935746f74c031a58f6c712f",
+      "heldOut": false,
+      "samples": [
+        {
+          "caseKey": "end_to_end_workflows/srp_splits_monolithic_function",
+          "repetition": 1,
+          "passed": false,
+          "assertions": [
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- src/order_processor.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": false,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios src/order_processor.py\" saiu com código 1: FALHA src/order_processor.py has no comments: found: ['docstring on line 2', 'docstring on line 13', 'docstring on line 26', 'docstring on line 38']"
+            }
+          ],
+          "output": "Refactored [src/order_processor.py](src/order_processor.py) into `validate_order`, `calculate_order_totals`, and `build_confirmation`. `process_order` now coordinates those steps.\n\nVerified unchanged results and errors across 10 regression cases. `git diff --check` passed.",
+          "tokenUsage": {
+            "input": 4427,
+            "output": 1191,
+            "cacheRead": 62336,
+            "cacheWrite": 0,
+            "reasoning": 276
+          },
+          "toolOutputCharacters": 2519,
+          "durationMs": 39486
+        },
+        {
+          "caseKey": "end_to_end_workflows/srp_splits_monolithic_function",
+          "repetition": 2,
+          "passed": false,
+          "assertions": [
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- src/order_processor.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": false,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios src/order_processor.py\" saiu com código 1: FALHA src/order_processor.py has no comments: found: ['docstring on line 2', 'docstring on line 13', 'docstring on line 26']"
+            }
+          ],
+          "output": "Refactored [src/order_processor.py](src/order_processor.py) into `validate_order`, `calculate_totals`, and `build_confirmation`. `process_order` now coordinates those steps.\n\nVerified unchanged behavior across 111 cases, including validation errors and discounts. `git diff --check` passed.",
+          "tokenUsage": {
+            "input": 4183,
+            "output": 1368,
+            "cacheRead": 62720,
+            "cacheWrite": 0,
+            "reasoning": 382
+          },
+          "toolOutputCharacters": 1743,
+          "durationMs": 49307
+        }
+      ]
+    },
+    {
+      "caseKey": "end_to_end_workflows/test_first_when_bug_reported",
+      "category": "end_to_end_workflows",
+      "name": "test_first_when_bug_reported",
+      "level": "end-to-end",
+      "type": "instruction",
+      "prompt": "Bug report: calculate_discounted_price(100, 110) returns -10.0 instead\nof raising an error. Discount percentages above 100 should not be allowed.\n",
+      "expected": [],
+      "fingerprint": "3adfec4f823179e9d74c831262f7d803f0eb93a3e815c83813856dddf0de5f6b",
+      "heldOut": false,
+      "samples": [
+        {
+          "caseKey": "end_to_end_workflows/test_first_when_bug_reported",
+          "repetition": 1,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- tests/test_discount.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- src/discount.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios src/discount.py\" saiu com código 0."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios tests/test_discount.py\" saiu com código 0."
+            }
+          ],
+          "output": "Fixed: `calculate_discounted_price` now raises `ValueError` for discounts above 100%. A 100% discount remains valid.\n\nAdded regression and boundary tests. All 5 tests pass.",
+          "tokenUsage": {
+            "input": 6413,
+            "output": 726,
+            "cacheRead": 58624,
+            "cacheWrite": 0,
+            "reasoning": 57
+          },
+          "toolOutputCharacters": 719,
+          "durationMs": 27314
+        },
+        {
+          "caseKey": "end_to_end_workflows/test_first_when_bug_reported",
+          "repetition": 2,
+          "passed": true,
+          "assertions": [
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- tests/test_discount.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"git status --porcelain -- src/discount.py\": casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios src/discount.py\" saiu com código 0."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios tests/test_discount.py\" saiu com código 0."
+            }
+          ],
+          "output": "Fixed: `calculate_discounted_price` now raises `ValueError` for discounts above 100%. Exactly 100% remains valid.\n\nAdded regression and boundary tests. All 5 tests pass.",
+          "tokenUsage": {
+            "input": 7137,
+            "output": 657,
+            "cacheRead": 57728,
+            "cacheWrite": 0,
+            "reasoning": 83
+          },
+          "toolOutputCharacters": 758,
+          "durationMs": 25806
+        }
+      ]
+    },
+    {
+      "caseKey": "end_to_end_workflows/workflow_full_edit_sequence",
+      "category": "end_to_end_workflows",
+      "name": "workflow_full_edit_sequence",
+      "level": "end-to-end",
+      "type": "instruction",
+      "prompt": "Add a farewell_message_for_user function to src/greeter.py that returns\n\"Goodbye, {name}!\". Follow the standard workflow after editing.\n",
+      "expected": [],
+      "fingerprint": "fa5414b8e43443e1a1d7a29ea689ab1d7b14b2e53a485e5e2c1c3cc738db70ec",
+      "heldOut": false,
+      "samples": [
+        {
+          "caseKey": "end_to_end_workflows/workflow_full_edit_sequence",
+          "repetition": 1,
+          "passed": false,
+          "assertions": [
+            {
+              "kind": "commandsRun",
+              "passed": true,
+              "message": "Comando com \"ruff\" executado."
+            },
+            {
+              "kind": "commandsRun",
+              "passed": true,
+              "message": "Comando com \"git add\" executado."
+            },
+            {
+              "kind": "commandsRun",
+              "passed": true,
+              "message": "Comando com \"git commit\" executado."
+            },
+            {
+              "kind": "commandsRunForbidden",
+              "passed": true,
+              "message": "Nenhum comando executado contém \"git add -A\"."
+            },
+            {
+              "kind": "commandsRunForbidden",
+              "passed": true,
+              "message": "Nenhum comando executado contém \"git add .\"."
+            },
+            {
+              "kind": "command",
+              "passed": false,
+              "message": "Comando \"git status --porcelain -- src/greeter.py\": nenhuma linha casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios src/greeter.py\" saiu com código 0."
+            }
+          ],
+          "output": "Added `farewell_message_for_user(name)` to `src/greeter.py`, returning `f\"Goodbye, {name}!\"`.\n\nFormatted with Ruff and verified both greeting functions. Committed as `46199c2`. Working tree is clean.",
+          "tokenUsage": {
+            "input": 8942,
+            "output": 483,
+            "cacheRead": 55680,
+            "cacheWrite": 0,
+            "reasoning": 17
+          },
+          "toolOutputCharacters": 807,
+          "durationMs": 20044
+        },
+        {
+          "caseKey": "end_to_end_workflows/workflow_full_edit_sequence",
+          "repetition": 2,
+          "passed": false,
+          "assertions": [
+            {
+              "kind": "commandsRun",
+              "passed": true,
+              "message": "Comando com \"ruff\" executado."
+            },
+            {
+              "kind": "commandsRun",
+              "passed": true,
+              "message": "Comando com \"git add\" executado."
+            },
+            {
+              "kind": "commandsRun",
+              "passed": true,
+              "message": "Comando com \"git commit\" executado."
+            },
+            {
+              "kind": "commandsRunForbidden",
+              "passed": true,
+              "message": "Nenhum comando executado contém \"git add -A\"."
+            },
+            {
+              "kind": "commandsRunForbidden",
+              "passed": true,
+              "message": "Nenhum comando executado contém \"git add .\"."
+            },
+            {
+              "kind": "command",
+              "passed": false,
+              "message": "Comando \"git status --porcelain -- src/greeter.py\": nenhuma linha casou com /./."
+            },
+            {
+              "kind": "command",
+              "passed": true,
+              "message": "Comando \"python3 \"$AGENT_EVALS_SOURCE_ROOT/agent-harness/quality/evaluations/scripts/workspace-check.py\" sem-comentarios src/greeter.py\" saiu com código 0."
+            }
+          ],
+          "output": "Added `farewell_message_for_user(name)` to `src/greeter.py`, returning `f\"Goodbye, {name}!\"`.\n\nFormatted with Ruff and verified behavior. Committed only the changed file as `3494861`. Working tree is clean.",
+          "tokenUsage": {
+            "input": 4389,
+            "output": 596,
+            "cacheRead": 87168,
+            "cacheWrite": 0,
+            "reasoning": 0
+          },
+          "toolOutputCharacters": 881,
+          "durationMs": 25325
+        }
+      ]
+    }
+  ]
+}

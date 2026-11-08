@@ -1,0 +1,30 @@
+let
+  hammerspoonCommandLineBinaryPath = "/opt/homebrew/bin/hs";
+
+  makeSummonViaHammerspoonGlobalFunctionManipulator = letter: hammerspoonGlobalFunctionName: {
+    type = "basic";
+    from = {
+      key_code = letter;
+      modifiers.mandatory = [ "command" ];
+    };
+    to = [
+      {
+        shell_command = "${hammerspoonCommandLineBinaryPath} -c \"${hammerspoonGlobalFunctionName}()\"";
+      }
+    ];
+  };
+in
+[
+  {
+    description = "Cmd+B summons the personal Google Chrome profile to the current workspace via Hammerspoon";
+    manipulators = [
+      (makeSummonViaHammerspoonGlobalFunctionManipulator "b" "summonPersonalChromeToCurrentWorkspace")
+    ];
+  }
+  {
+    description = "Cmd+C summons the work Google Chrome profile to the current workspace via Hammerspoon";
+    manipulators = [
+      (makeSummonViaHammerspoonGlobalFunctionManipulator "c" "summonWorkChromeToCurrentWorkspace")
+    ];
+  }
+]

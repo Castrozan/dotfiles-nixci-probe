@@ -1,0 +1,249 @@
+#!/usr/bin/env python3
+
+import os
+import signal
+import sys
+import time
+from dataclasses import dataclass
+
+import Quartz
+from AppKit import NSApplicationActivationPolicyRegular, NSScreen, NSWorkspace
+from Foundation import NSDate, NSRunLoop
+from objc import autorelease_pool
+
+POLL_INTERVAL_SECONDS = 2
+SECONDS_WITHOUT_A_WINDOW_BEFORE_QUITTING = 5
+SECONDS_AFTER_LAUNCH_BEFORE_QUITTING_AN_APPLICATION_THAT_NEVER_OPENED_A_WINDOW = 60
+SECONDS_BETWEEN_REPEATED_QUIT_REQUESTS = 15
+LARGEST_EDGE_OF_AN_UNPLACED_SYSTEM_WINDOW = 500
+
+EXCLUDED_APPLICATION_BUNDLE_IDENTIFIERS = frozenset(
+    {
+        "com.apple.finder",
+    }
+)
+
+
+@dataclass
+class ApplicationWindowHistory:
+    first_seen_at: float
+    last_seen_with_a_window_at: float | None = None
+    quit_requested_at: float | None = None
+
+
+def seconds_the_application_has_been_without_a_window(history, current_time):
+    if history.last_seen_with_a_window_at is None:
+        return current_time - history.first_seen_at
+    return current_time - history.last_seen_with_a_window_at
+
+
+def seconds_without_a_window_tolerated(history):
+    if history.last_seen_with_a_window_at is None:
+        return SECONDS_AFTER_LAUNCH_BEFORE_QUITTING_AN_APPLICATION_THAT_NEVER_OPENED_A_WINDOW
+    return SECONDS_WITHOUT_A_WINDOW_BEFORE_QUITTING
+
+
+def should_request_quit(history, current_time):
+    if seconds_the_application_has_been_without_a_window(
+        history, current_time
+    ) < seconds_without_a_window_tolerated(history):
+        return False
+    if history.quit_requested_at is None:
+        return True
+    return (
+        current_time - history.quit_requested_at
+        >= SECONDS_BETWEEN_REPEATED_QUIT_REQUESTS
+    )
+
+
+def get_tallest_menu_bar_height():
+    menu_bar_heights = [
+        (screen.frame().origin.y + screen.frame().size.height)
+        - (screen.visibleFrame().origin.y + screen.visibleFrame().size.height)
+        for screen in NSScreen.screens()
+    ]
+    return max(menu_bar_heights, default=0.0)
+
+
+def get_screen_bottom_left_corners():
+    screens = NSScreen.screens()
+    if not screens:
+        return set()
+    primary_screen_height = screens[0].frame().size.height
+    return {
+        (screen.frame().origin.x, primary_screen_height - screen.frame().origin.y)
+        for screen in screens
+    }
+
+
+def window_was_never_placed_on_a_screen(window_bounds, screen_bottom_left_corners):
+    window_width = window_bounds.get("Width", 0)
+    window_height = window_bounds.get("Height", 0)
+    if (
+        window_width > LARGEST_EDGE_OF_AN_UNPLACED_SYSTEM_WINDOW
+        or window_height > LARGEST_EDGE_OF_AN_UNPLACED_SYSTEM_WINDOW
+    ):
+        return False
+    bottom_left_corner = (
+        window_bounds.get("X", 0),
+        window_bounds.get("Y", 0) + window_height,
+    )
+    return bottom_left_corner in screen_bottom_left_corners
+
+
+def window_is_a_visible_application_window(
+    window_info, menu_bar_height, screen_bottom_left_corners
+):
+    if window_info.get(Quartz.kCGWindowLayer, -1) != 0:
+        return False
+    window_bounds = window_info.get(Quartz.kCGWindowBounds, {})
+    if window_bounds.get("Width", 0) <= 0:
+        return False
+    if window_bounds.get("Height", 0) <= menu_bar_height:
+        return False
+    return not window_was_never_placed_on_a_screen(
+        window_bounds, screen_bottom_left_corners
+    )
+
+
+def get_process_identifiers_with_visible_windows(
+    menu_bar_height, screen_bottom_left_corners
+):
+    window_info_list = Quartz.CGWindowListCopyWindowInfo(
+        Quartz.kCGWindowListOptionAll | Quartz.kCGWindowListExcludeDesktopElements,
+        Quartz.kCGNullWindowID,
+    )
+    visible_window_infos = [
+        window_info
+        for window_info in window_info_list or []
+        if window_is_a_visible_application_window(
+            window_info, menu_bar_height, screen_bottom_left_corners
+        )
+    ]
+    return {
+        window_info.get(Quartz.kCGWindowOwnerPID)
+        for window_info in visible_window_infos
+        if window_info.get(Quartz.kCGWindowOwnerPID)
+    }
+
+
+def process_is_still_alive(process_identifier):
+    try:
+        os.kill(process_identifier, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
+def get_running_regular_applications():
+    workspace = NSWorkspace.sharedWorkspace()
+    return [
+        application
+        for application in workspace.runningApplications()
+        if application.activationPolicy() == NSApplicationActivationPolicyRegular
+        and process_is_still_alive(application.processIdentifier())
+    ]
+
+
+def wait_for_the_next_poll_while_the_workspace_receives_notifications():
+    deadline = time.monotonic() + POLL_INTERVAL_SECONDS
+    NSRunLoop.currentRunLoop().runUntilDate_(
+        NSDate.dateWithTimeIntervalSinceNow_(POLL_INTERVAL_SECONDS)
+    )
+    remaining_seconds = deadline - time.monotonic()
+    if remaining_seconds > 0:
+        time.sleep(remaining_seconds)
+
+
+def forget_applications_that_exited(
+    window_history_by_process_identifier, running_applications
+):
+    running_process_identifiers = {
+        application.processIdentifier() for application in running_applications
+    }
+    for process_identifier in list(window_history_by_process_identifier):
+        if process_identifier not in running_process_identifiers:
+            del window_history_by_process_identifier[process_identifier]
+
+
+def is_application_excluded_from_quitting(application):
+    return application.bundleIdentifier() in EXCLUDED_APPLICATION_BUNDLE_IDENTIFIERS
+
+
+def request_quit_of_application_without_windows(
+    application, process_identifier, history, current_time
+):
+    seconds_without_a_window = seconds_the_application_has_been_without_a_window(
+        history, current_time
+    )
+    history.quit_requested_at = current_time
+    application_name = application.localizedName() or "unknown"
+    print(
+        f"Quitting {application_name} (PID {process_identifier})"
+        f" - no windows for {seconds_without_a_window:.0f}s",
+        flush=True,
+    )
+    application.terminate()
+
+
+def review_application_window_history(
+    application,
+    process_identifiers_with_windows,
+    window_history_by_process_identifier,
+    current_time,
+):
+    process_identifier = application.processIdentifier()
+    history = window_history_by_process_identifier.setdefault(
+        process_identifier,
+        ApplicationWindowHistory(first_seen_at=current_time),
+    )
+
+    if process_identifier in process_identifiers_with_windows:
+        history.last_seen_with_a_window_at = current_time
+        history.quit_requested_at = None
+        return
+
+    if should_request_quit(history, current_time):
+        request_quit_of_application_without_windows(
+            application, process_identifier, history, current_time
+        )
+
+
+def poll_running_applications_once(window_history_by_process_identifier):
+    wait_for_the_next_poll_while_the_workspace_receives_notifications()
+
+    running_applications = get_running_regular_applications()
+    process_identifiers_with_windows = get_process_identifiers_with_visible_windows(
+        get_tallest_menu_bar_height(), get_screen_bottom_left_corners()
+    )
+    current_time = time.time()
+
+    for application in running_applications:
+        if is_application_excluded_from_quitting(application):
+            continue
+        review_application_window_history(
+            application,
+            process_identifiers_with_windows,
+            window_history_by_process_identifier,
+            current_time,
+        )
+
+    forget_applications_that_exited(
+        window_history_by_process_identifier, running_applications
+    )
+
+
+def main():
+    signal.signal(signal.SIGTERM, lambda _signum, _frame: sys.exit(0))
+
+    window_history_by_process_identifier = {}
+
+    while True:
+        with autorelease_pool():
+            poll_running_applications_once(window_history_by_process_identifier)
+
+
+if __name__ == "__main__":
+    main()

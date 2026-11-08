@@ -1,0 +1,36 @@
+{
+  inputs,
+  release,
+  system,
+}:
+{ hostname, username }:
+let
+  channels = import ./channels.nix { inherit inputs system; };
+
+  specialArgs = {
+    inherit inputs hostname username;
+    inherit (channels) unstable latest;
+    nixpkgs-version = release;
+    home-version = release;
+    isNixOS = false;
+    isDarwin = true;
+  };
+
+  homeManager = import ./home-manager.nix {
+    inherit hostname username specialArgs;
+    sharedModules = [ inputs.stylix.homeModules.stylix ];
+  };
+in
+inputs.nix-darwin.lib.darwinSystem {
+  inherit system specialArgs;
+
+  modules = [
+    ../../machine-configuration/development/development-environments/devenv-cache-system.nix
+    ../../machine-configuration/development/system-rebuild/dotfiles-binary-cache-system.nix
+    ../../machine-configuration/security/certificate-trust/certificate-authority-distrust-system.nix
+    ../../agent-harness/harnesses/codex/system-managed-hooks.nix
+    ../../machine-configuration/machines/${hostname}/system
+    inputs.home-manager.darwinModules.home-manager
+    homeManager
+  ];
+}

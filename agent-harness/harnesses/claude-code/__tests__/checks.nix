@@ -1,0 +1,200 @@
+{
+  helpers,
+  pkgs,
+  lib,
+  self,
+  inputs,
+  ...
+}:
+let
+  inherit (helpers) mkEvalCheck;
+
+  cfg = helpers.homeManagerTestConfiguration [
+    self.homeManagerModules.claude-code
+  ];
+
+  nativeClaudeHooks =
+    (helpers.homeManagerTestConfigurationForEvaluatingSystem [ self.homeManagerModules.claude-code ])
+    .home.file.".claude/hooks".source;
+
+  fileNames = builtins.attrNames cfg.home.file;
+
+  hasFilePrefix =
+    prefix: builtins.any (n: builtins.substring 0 (builtins.stringLength prefix) n == prefix) fileNames;
+
+  testMachinePrivateMarketplacePluginsFixture = ../../../../private-configuration/machines/test/claude-plugins.nix;
+  testMachinePrivateMarketplacePluginsFixtureExists = builtins.pathExists testMachinePrivateMarketplacePluginsFixture;
+  testMachinePrivateMarketplacePlugins =
+    if testMachinePrivateMarketplacePluginsFixtureExists then
+      import testMachinePrivateMarketplacePluginsFixture
+    else
+      { };
+  expectedPrivateSettings = pkgs.writeText "claude-private-settings.json" (
+    builtins.toJSON testMachinePrivateMarketplacePlugins
+  );
+  updateEnabledPluginsActivation = cfg.home.activation.updateEnabledClaudePlugins.data;
+
+  workspaceProfilesDeclaringPlugins = lib.filter (
+    workspaceProfile: workspaceProfile.claudeCode ? settingsOverlay
+  ) cfg.agentWorkspaceProfiles.profiles;
+
+  everyEnabledPluginSourceReachesThePluginUpdate =
+    lib.hasInfix ".claude/settings.json.nix-source" updateEnabledPluginsActivation
+    && builtins.all (
+      workspaceProfile:
+      lib.hasInfix "claude-workspace-profile-${workspaceProfile.name}-settings.json" updateEnabledPluginsActivation
+    ) workspaceProfilesDeclaringPlugins;
+
+  darwinCfg = helpers.homeManagerTestConfigurationForDarwin [
+    self.homeManagerModules.claude-code
+  ];
+
+  canonicalIngestBaseUrl = "https://lucaszanoni.com/ingest";
+
+  launchdIngestPublishEnvironment =
+    darwinCfg.launchd.agents.claude-usage-ingest-publish.config.EnvironmentVariables;
+
+  systemdIngestPublishEnvironment =
+    cfg.systemd.user.services.claude-usage-ingest-publish.Service.Environment;
+in
+{
+  claude-usage-ingest-publish-targets-the-canonical-domain-on-darwin =
+    mkEvalCheck "claude-usage-ingest-publish-targets-the-canonical-domain-on-darwin"
+      (launchdIngestPublishEnvironment.INGEST_BASE_URL == canonicalIngestBaseUrl)
+      "the usage producer must POST to the canonical domain; the lucaszanoni.com.br zone is a permanent redirect alias and a 301 silently drops a POST body instead of ingesting it";
+
+  claude-usage-ingest-publish-targets-the-canonical-domain-on-linux =
+    mkEvalCheck "claude-usage-ingest-publish-targets-the-canonical-domain-on-linux"
+      (builtins.elem "INGEST_BASE_URL=${canonicalIngestBaseUrl}" systemdIngestPublishEnvironment)
+      "the linux timer publishes through the same producer, so its systemd Environment must carry the canonical ingest url too; a redirect alias would silently drop the POST body";
+
+  claude-settings-nix-source =
+    mkEvalCheck "claude-settings-nix-source"
+      (builtins.hasAttr ".claude/settings.json.nix-source" cfg.home.file)
+      "settings.json.nix-source should be in home.file (mutable settings.json is seeded from this)";
+
+  claude-hooks-deployed-as-single-directory =
+    mkEvalCheck "claude-hooks-deployed-as-single-directory"
+      (
+        builtins.hasAttr ".claude/hooks" cfg.home.file
+        && !(hasFilePrefix ".claude/hooks/")
+        && !cfg.home.file.".claude/hooks".recursive
+      )
+      "hooks must deploy as one atomic directory symlink (home.file.\".claude/hooks\"), never per-file entries; per-file relinking transiently removes helper modules mid-rebuild and breaks hook imports";
+
+  claude-hooks-include-the-native-herdr-integration =
+    pkgs.runCommandLocal "claude-hooks-include-the-native-herdr-integration" { }
+      ''
+        test -x ${nativeClaudeHooks}/herdr-agent-state.sh
+        cmp ${nativeClaudeHooks}/herdr-agent-state.sh ${inputs.herdr}/src/integration/assets/claude/herdr-agent-state.sh
+        test -x ${nativeClaudeHooks}/run-hook.sh
+        touch "$out"
+      '';
+
+  claude-bin-wrapper =
+    mkEvalCheck "claude-bin-wrapper" (builtins.hasAttr ".local/bin/claude" cfg.home.file)
+      ".local/bin/claude should be in home.file";
+
+  chrome-devtools-mcp-bridge-service-removed =
+    mkEvalCheck "chrome-devtools-mcp-bridge-service-removed"
+      (!(cfg.systemd.user.services ? "chrome-devtools-mcp-bridge"))
+      "chrome-devtools-mcp-bridge.service must not exist; chrome-devtools is a direct stdio MCP";
+
+  a2a-mcp-bridge-service-removed =
+    mkEvalCheck "a2a-mcp-bridge-service-removed" (!(cfg.systemd.user.services ? "a2a-mcp-bridge"))
+      "a2a-mcp-bridge.service must not exist; a2a is reached through the `a2a` command line tool over plain HTTP, so neither a bridge service nor an MCP server belongs here";
+
+  claude-private-marketplace-plugins-folded-into-settings =
+    pkgs.runCommand "claude-private-marketplace-plugins-folded-into-settings" { }
+      ''
+        ${pkgs.python312}/bin/python3 ${./verify-private-settings.py} \
+          ${cfg.home.file.".claude/settings.json.nix-source".source} ${expectedPrivateSettings}
+        touch "$out"
+      '';
+
+  claude-plugin-update-reads-every-enabled-plugin-source =
+    mkEvalCheck "claude-plugin-update-reads-every-enabled-plugin-source"
+      everyEnabledPluginSourceReachesThePluginUpdate
+      "a workspace profile is the only place some machines turn a plugin on, so the update activation has to read every profile's settings overlay alongside the user-scope nix source; reading the nix source alone leaves each profile-scoped plugin frozen at the version it was first installed with, and no rebuild ever moves it";
+
+  claude-home-carries-no-nix-modules =
+    mkEvalCheck "claude-home-carries-no-nix-modules"
+      (
+        !(builtins.any (
+          fileName: lib.hasPrefix ".claude/" fileName && lib.hasSuffix ".nix" fileName
+        ) fileNames)
+      )
+      "private-configuration/machines/<hostname>/claude mixes files Claude reads out of ~/.claude with nix modules the harness imports, so private.nix must keep the modules out; a deployed .nix file would publish machine configuration as if it were Claude data";
+
+}
+// import ./remove-claude-managed-settings-nix-darwin-checks.nix {
+  inherit
+    helpers
+    pkgs
+    lib
+    self
+    ;
+}
+// import ./skill-tier-checks.nix {
+  inherit
+    pkgs
+    lib
+    mkEvalCheck
+    cfg
+    hasFilePrefix
+    ;
+}
+// import ./mcp-server-injection-checks.nix {
+  inherit
+    lib
+    mkEvalCheck
+    ;
+}
+// import ./hook-registration-checks.nix {
+  inherit
+    pkgs
+    lib
+    mkEvalCheck
+    cfg
+    ;
+}
+// import ./bypass-mode-checks.nix {
+  inherit
+    pkgs
+    lib
+    mkEvalCheck
+    cfg
+    ;
+}
+// import ./hook-flat-deploy-checks.nix {
+  inherit
+    pkgs
+    lib
+    mkEvalCheck
+    ;
+}
+// import ./chrome-devtools-cli-checks.nix {
+  inherit
+    pkgs
+    lib
+    mkEvalCheck
+    ;
+}
+// import ../model-providers/chatgpt-subscription/__tests__/checks.nix {
+  inherit
+    pkgs
+    lib
+    mkEvalCheck
+    helpers
+    self
+    ;
+}
+// import ../model-providers/opencode-go/__tests__/checks.nix {
+  inherit
+    pkgs
+    lib
+    mkEvalCheck
+    helpers
+    self
+    ;
+}

@@ -1,0 +1,261 @@
+#!/usr/bin/env bats
+
+setup() {
+	REPO_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/../../../../.." && pwd)"
+	source "$REPO_ROOT/repository/verification/helpers/bash-script-assertions.bash"
+	SCRIPT_UNDER_TEST="$(_resolve_script_under_test)"
+	BACKENDS_SOURCE_DIRECTORY="$(dirname "$SCRIPT_UNDER_TEST")/backends"
+	TEST_LOCK_HELPER="$BATS_TEST_TMPDIR/exclusive-run-lock.sh"
+	touch "$BATS_TEST_TMPDIR/exclusive_run_lock.py" "$BATS_TEST_TMPDIR/exclusive_run_scope.py"
+	cat >"$TEST_LOCK_HELPER" <<-'STUB'
+		capture_exclusive_run_owner() {
+			export DOTFILES_EXCLUSIVE_RUN_OWNER='{"owner_type":"non-agent"}'
+		}
+		acquire_exclusive_run_lock_or_emit_retry_instructions() {
+			echo "LOCK_ACQUIRED name=$1 typical_duration=$2"
+		}
+	STUB
+	source <(sed "s|@exclusiveRunLockHelper@|$TEST_LOCK_HELPER|g" "$SCRIPT_UNDER_TEST")
+}
+
+readonly BACKEND_CONTRACT=(
+	backend_prepare_environment
+	backend_switch
+	backend_verify_switch_landed
+	backend_after_switch
+)
+
+@test "rebuild script is executable" {
+	assert_is_executable
+}
+
+@test "rebuild script uses strict error handling" {
+	assert_uses_strict_error_handling
+}
+
+@test "rebuild script passes shellcheck" {
+	assert_passes_shellcheck
+}
+
+@test "every backend passes shellcheck" {
+	if ! command -v shellcheck &>/dev/null; then
+		skip "shellcheck not installed"
+	fi
+	run shellcheck "$BACKENDS_SOURCE_DIRECTORY"/*
+	[ "$status" -eq 0 ]
+}
+
+@test "every backend implements the whole contract the entrypoint calls" {
+	for backend in "$BACKENDS_SOURCE_DIRECTORY"/*; do
+		for contract_function in "${BACKEND_CONTRACT[@]}"; do
+			grep -q "^${contract_function}()" "$backend" ||
+				fail_test "$(basename "$backend") is missing ${contract_function}"
+		done
+	done
+}
+
+@test "the entrypoint calls exactly the contract it declares" {
+	for contract_function in "${BACKEND_CONTRACT[@]}"; do
+		grep -q "^	${contract_function}\b" "$SCRIPT_UNDER_TEST" ||
+			fail_test "the entrypoint never calls ${contract_function}"
+	done
+}
+
+@test "darwin is detected from uname" {
+	uname() { echo "Darwin"; }
+	run detect_backend_name
+	[ "$output" = "darwin" ]
+}
+
+@test "nixos is detected from its marker file" {
+	uname() { echo "Linux"; }
+	run detect_backend_name
+	if [ -e /etc/NIXOS ]; then
+		[ "$output" = "nixos" ]
+	else
+		[ "$output" = "home-manager" ]
+	fi
+}
+
+@test "a non-nixos linux host falls back to the home-manager backend" {
+	uname() { echo "Linux"; }
+	detect_backend_name() {
+		[ "$(uname -s)" = "Darwin" ] && echo "darwin" && return 0
+		[ -e "$BATS_TEST_TMPDIR/absent-nixos-marker" ] && echo "nixos" && return 0
+		echo "home-manager"
+	}
+	run detect_backend_name
+	[ "$output" = "home-manager" ]
+}
+
+@test "home-manager takes the shared exclusive-run lock directly" {
+	detect_backend_name() { echo "home-manager"; }
+	run prepare_exclusive_rebuild_lock
+	[ "$status" -eq 0 ]
+	[[ "$output" == *"LOCK_ACQUIRED name=rebuild"* ]]
+	[[ "$output" == *"typical_duration=420"* ]]
+}
+
+@test "system rebuild entrypoints delegate ownership to their privileged guards" {
+	for platform in nixos darwin; do
+		detect_backend_name() { echo "$platform"; }
+		run prepare_exclusive_rebuild_lock
+		[ "$status" -eq 0 ]
+		[ -z "$output" ]
+	done
+}
+
+@test "the entrypoint prepares locking before it switches" {
+	local lock_line switch_line
+	lock_line=$(grep -n '^	prepare_exclusive_rebuild_lock$' "$SCRIPT_UNDER_TEST" | cut -d: -f1)
+	switch_line=$(grep -n '^	backend_switch ' "$SCRIPT_UNDER_TEST" | cut -d: -f1)
+	[ "$lock_line" -lt "$switch_line" ]
+}
+
+@test "rebuild fails closed when its lock helper is absent" {
+	rm "$TEST_LOCK_HELPER"
+	run prepare_exclusive_rebuild_lock
+	[ "$status" -eq 1 ]
+	[[ "$output" == *"exclusive rebuild lock helper not found"* ]]
+}
+
+@test "rebuild fails closed when its lock driver is absent" {
+	rm "$BATS_TEST_TMPDIR/exclusive_run_lock.py"
+	run prepare_exclusive_rebuild_lock
+	[ "$status" -eq 1 ]
+	[[ "$output" == *"exclusive rebuild lock driver is missing"* ]]
+}
+
+@test "the nixos backend resolves the entrypoint owner to the whole machine-local repository" {
+	source "$BACKENDS_SOURCE_DIRECTORY/nixos"
+	machine_local_entrypoint_flake_present() { return 0; }
+	run resolve_flake_reference chise
+	[ "$output" = "git+file://${HOME}/zanoni-system#chise" ]
+}
+
+@test "a host without an entrypoint repository builds from bare dotfiles" {
+	source "$BACKENDS_SOURCE_DIRECTORY/nixos"
+	machine_local_entrypoint_flake_present() { return 0; }
+	run resolve_flake_reference kira
+	[[ "$output" == *".dotfiles?submodules=1#kira" ]]
+}
+
+@test "the entrypoint owner may not deploy from bare dotfiles" {
+	source "$BACKENDS_SOURCE_DIRECTORY/nixos"
+	machine_local_entrypoint_flake_present() { return 1; }
+	run refuse_to_deploy_the_entrypoint_owner_from_bare_dotfiles chise
+	[ "$status" -ne 0 ]
+	[[ "$output" == *"refusing to deploy chise from bare"* ]]
+}
+
+@test "the entrypoint owner may deploy when its repository carries a flake" {
+	source "$BACKENDS_SOURCE_DIRECTORY/nixos"
+	machine_local_entrypoint_flake_present() { return 0; }
+	run refuse_to_deploy_the_entrypoint_owner_from_bare_dotfiles chise
+	[ "$status" -eq 0 ]
+}
+
+@test "a host that does not own the entrypoint deploys from bare dotfiles freely" {
+	source "$BACKENDS_SOURCE_DIRECTORY/nixos"
+	machine_local_entrypoint_flake_present() { return 1; }
+	run refuse_to_deploy_the_entrypoint_owner_from_bare_dotfiles kira
+	[ "$status" -eq 0 ]
+}
+
+@test "the entrypoint owner builds the repository without a persistent lock" {
+	grep -q 'lock_flags+=(--no-write-lock-file)' "$BACKENDS_SOURCE_DIRECTORY/nixos"
+	grep -q '"$rebuild_action" --flake.*"${lock_flags\[@\]}"' "$BACKENDS_SOURCE_DIRECTORY/nixos"
+}
+
+@test "nixos-rebuild is invoked with the rebuild-wrapper sentinel" {
+	grep -q 'DOTFILES_REBUILD_WRAPPER=1' "$BACKENDS_SOURCE_DIRECTORY/nixos"
+	grep -q '"$NIXOS_STAGED_REBUILD" "$rebuild_action"' "$BACKENDS_SOURCE_DIRECTORY/nixos"
+}
+
+@test "the entrypoint initializes git submodules before switching" {
+	grep -q 'submodule update --init' "$SCRIPT_UNDER_TEST"
+	local submodule_line switch_line
+	submodule_line=$(grep -n '^	initialize_git_submodules$' "$SCRIPT_UNDER_TEST" | cut -d: -f1)
+	switch_line=$(grep -n '^	backend_switch ' "$SCRIPT_UNDER_TEST" | cut -d: -f1)
+	[ "$submodule_line" -lt "$switch_line" ]
+}
+
+@test "a desktop refresh that fails does not fail a switch that already landed" {
+	grep -q 'backend_after_switch || echo' "$SCRIPT_UNDER_TEST"
+}
+
+@test "hyprland is reloaded only when this shell is attached to a compositor" {
+	source "$BACKENDS_SOURCE_DIRECTORY/nixos"
+	hyprctl() { echo "HYPRCTL_CALLED"; }
+	HYPRLAND_INSTANCE_SIGNATURE=""
+	run backend_after_switch
+	[ "$status" -eq 0 ]
+	[[ "$output" != *"HYPRCTL_CALLED"* ]]
+}
+
+@test "hyprland is reloaded when a compositor instance is attached" {
+	source "$BACKENDS_SOURCE_DIRECTORY/nixos"
+	hyprctl() { echo "HYPRCTL_CALLED"; }
+	hypr-apply-theme-colors() { echo "THEME_COLORS_APPLIED"; }
+	HYPRLAND_INSTANCE_SIGNATURE="a-live-instance"
+	run backend_after_switch
+	[ "$status" -eq 0 ]
+	[[ "$output" == *"HYPRCTL_CALLED"* ]]
+	[[ "$output" == *"THEME_COLORS_APPLIED"* ]]
+}
+
+@test "the darwin backend proves activation refreshed the current-system symlink" {
+	source "$BACKENDS_SOURCE_DIRECTORY/darwin"
+	current_system_symlink_mtime_before_switch="1700000000"
+	read_current_system_symlink_mtime() { echo "1700000000"; }
+	abort_because_the_current_system_symlink_is_stale() { echo "ABORTED_STALE"; }
+	run backend_verify_switch_landed
+	[[ "$output" == *"ABORTED_STALE"* ]]
+}
+
+@test "the darwin backend accepts a refreshed current-system symlink" {
+	source "$BACKENDS_SOURCE_DIRECTORY/darwin"
+	current_system_symlink_mtime_before_switch="1700000000"
+	read_current_system_symlink_mtime() { echo "1700000042"; }
+	abort_because_the_current_system_symlink_is_stale() { echo "ABORTED_STALE"; }
+	run backend_verify_switch_landed
+	[ "$status" -eq 0 ]
+	[[ "$output" != *"ABORTED_STALE"* ]]
+}
+
+fail_test() {
+	echo "$1" >&2
+	return 1
+}
+
+@test "every switch ends by nudging clawde agents to redeploy on their continued sessions" {
+	grep -A1 'backend_after_switch || echo' "$SCRIPT_UNDER_TEST" |
+		grep -q '^	nudge_clawde_agents_to_redeploy_on_continued_sessions$'
+}
+
+@test "the redeploy nudge belongs to the entrypoint, not to one backend" {
+	for backend in "$BACKENDS_SOURCE_DIRECTORY"/*; do
+		! grep -q 'clawde-redeploy' "$backend" ||
+			fail_test "$(basename "$backend") nudges clawde on its own"
+	done
+}
+
+@test "the redeploy nudge runs clawde-redeploy when the machine has it" {
+	clawde-redeploy() { echo "CLAWDE_REDEPLOY_CALLED"; }
+	run nudge_clawde_agents_to_redeploy_on_continued_sessions
+	[ "$status" -eq 0 ]
+	[[ "$output" == *"CLAWDE_REDEPLOY_CALLED"* ]]
+}
+
+@test "a failing redeploy nudge does not fail a switch that already landed" {
+	clawde-redeploy() { return 1; }
+	run nudge_clawde_agents_to_redeploy_on_continued_sessions
+	[ "$status" -eq 0 ]
+}
+
+@test "a machine without clawde skips the redeploy nudge silently" {
+	unset -f clawde-redeploy
+	PATH="$BATS_TEST_TMPDIR" run nudge_clawde_agents_to_redeploy_on_continued_sessions
+	[ "$status" -eq 0 ]
+	[ -z "$output" ]
+}

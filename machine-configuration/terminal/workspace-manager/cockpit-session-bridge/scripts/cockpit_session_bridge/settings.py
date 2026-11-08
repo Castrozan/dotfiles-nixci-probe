@@ -1,0 +1,151 @@
+import json
+from dataclasses import dataclass
+from urllib.parse import parse_qs, urlsplit
+
+DEFAULT_SESSION_COMMAND = ["/bin/sh", "-il"]
+DEFAULT_LISTEN_ADDRESS = "127.0.0.1"
+DEFAULT_LISTEN_PORT = 8787
+DEFAULT_ALLOWED_REQUEST_ORIGIN = "https://lucaszanoni.com"
+DEFAULT_TERMINAL_TYPE = "xterm-256color"
+DEFAULT_COCKPIT_TMUX_EXECUTABLE_PATH = "tmux"
+DEFAULT_COCKPIT_TMUX_SOCKET_NAME = "cockpit"
+DEFAULT_COCKPIT_HERDR_EXECUTABLE_PATH = "herdr"
+DEFAULT_COCKPIT_HERDR_SESSION_NAME = "default"
+MAXIMUM_PSEUDOTERMINAL_DIMENSION = 10000
+
+
+@dataclass(frozen=True)
+class CockpitSessionBridgeSettings:
+    listen_address: str
+    listen_port: int
+    session_command: list
+    allowed_request_origin: str
+    terminal_type: str
+    cockpit_tmux_executable_path: str = DEFAULT_COCKPIT_TMUX_EXECUTABLE_PATH
+    cockpit_tmux_enumeration_socket_name: str = DEFAULT_COCKPIT_TMUX_SOCKET_NAME
+    cockpit_tmux_mutation_socket_name: str = DEFAULT_COCKPIT_TMUX_SOCKET_NAME
+    cockpit_tmux_remote_ssh_host: str = ""
+    cockpit_herdr_executable_path: str = DEFAULT_COCKPIT_HERDR_EXECUTABLE_PATH
+    cockpit_herdr_session_name: str = DEFAULT_COCKPIT_HERDR_SESSION_NAME
+
+
+@dataclass(frozen=True)
+class PseudoterminalWindowSizeRequest:
+    columns: int
+    rows: int
+
+
+def parse_owner_control_message(raw_text_message):
+    try:
+        decoded_control_message = json.loads(raw_text_message)
+    except (ValueError, TypeError):
+        return None
+    if not isinstance(decoded_control_message, dict):
+        return None
+    if decoded_control_message.get("type") != "resize":
+        return None
+    requested_columns = decoded_control_message.get("columns")
+    requested_rows = decoded_control_message.get("rows")
+    if not _is_valid_pseudoterminal_dimension(
+        requested_columns
+    ) or not _is_valid_pseudoterminal_dimension(requested_rows):
+        return None
+    return PseudoterminalWindowSizeRequest(
+        columns=requested_columns, rows=requested_rows
+    )
+
+
+def _is_valid_pseudoterminal_dimension(candidate_dimension):
+    return (
+        isinstance(candidate_dimension, int)
+        and not isinstance(candidate_dimension, bool)
+        and 0 < candidate_dimension <= MAXIMUM_PSEUDOTERMINAL_DIMENSION
+    )
+
+
+def parse_session_command(raw_session_command_json):
+    if not raw_session_command_json:
+        return list(DEFAULT_SESSION_COMMAND)
+    decoded_session_command = json.loads(raw_session_command_json)
+    if not isinstance(decoded_session_command, list) or not all(
+        isinstance(command_argument, str)
+        for command_argument in decoded_session_command
+    ):
+        raise ValueError("session command must be a JSON array of strings")
+    if not decoded_session_command:
+        raise ValueError("session command must not be empty")
+    return decoded_session_command
+
+
+def resolve_bridge_settings(process_environment):
+    return CockpitSessionBridgeSettings(
+        listen_address=process_environment.get(
+            "COCKPIT_SESSION_BRIDGE_LISTEN_ADDRESS", DEFAULT_LISTEN_ADDRESS
+        ),
+        listen_port=int(
+            process_environment.get(
+                "COCKPIT_SESSION_BRIDGE_LISTEN_PORT", str(DEFAULT_LISTEN_PORT)
+            )
+        ),
+        session_command=parse_session_command(
+            process_environment.get("COCKPIT_SESSION_BRIDGE_COMMAND_JSON", "")
+        ),
+        allowed_request_origin=process_environment.get(
+            "COCKPIT_SESSION_BRIDGE_ALLOWED_ORIGIN", DEFAULT_ALLOWED_REQUEST_ORIGIN
+        ),
+        terminal_type=DEFAULT_TERMINAL_TYPE,
+        cockpit_tmux_executable_path=process_environment.get(
+            "COCKPIT_SESSION_BRIDGE_TMUX_PATH",
+            DEFAULT_COCKPIT_TMUX_EXECUTABLE_PATH,
+        ),
+        cockpit_tmux_enumeration_socket_name=process_environment.get(
+            "COCKPIT_SESSION_BRIDGE_TMUX_ENUMERATION_SOCKET",
+            DEFAULT_COCKPIT_TMUX_SOCKET_NAME,
+        ),
+        cockpit_tmux_mutation_socket_name=process_environment.get(
+            "COCKPIT_SESSION_BRIDGE_TMUX_MUTATION_SOCKET",
+            DEFAULT_COCKPIT_TMUX_SOCKET_NAME,
+        ),
+        cockpit_tmux_remote_ssh_host=process_environment.get(
+            "COCKPIT_SESSION_BRIDGE_TMUX_REMOTE_SSH_HOST",
+            "",
+        ),
+        cockpit_herdr_executable_path=process_environment.get(
+            "COCKPIT_SESSION_BRIDGE_HERDR_PATH",
+            DEFAULT_COCKPIT_HERDR_EXECUTABLE_PATH,
+        ),
+        cockpit_herdr_session_name=process_environment.get(
+            "COCKPIT_SESSION_BRIDGE_HERDR_SESSION",
+            DEFAULT_COCKPIT_HERDR_SESSION_NAME,
+        ),
+    )
+
+
+def is_request_origin_allowed(request_origin, allowed_request_origin):
+    if not allowed_request_origin:
+        return True
+    return request_origin == allowed_request_origin
+
+
+def read_request_origin(websocket_connection):
+    connection_request = getattr(websocket_connection, "request", None)
+    if connection_request is not None:
+        return connection_request.headers.get("Origin", "")
+    legacy_request_headers = getattr(websocket_connection, "request_headers", None)
+    if legacy_request_headers is not None:
+        return legacy_request_headers.get("Origin", "")
+    return ""
+
+
+def read_request_path(websocket_connection):
+    connection_request = getattr(websocket_connection, "request", None)
+    if connection_request is not None:
+        return getattr(connection_request, "path", "")
+    return ""
+
+
+def read_session_attach_target(request_path):
+    requested_terminals = parse_qs(urlsplit(request_path).query).get("terminal")
+    if requested_terminals and requested_terminals[0]:
+        return requested_terminals[0]
+    return None

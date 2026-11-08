@@ -1,0 +1,86 @@
+{
+  helpers,
+  pkgs,
+  lib,
+  self,
+  ...
+}:
+let
+  inherit (helpers) mkEvalCheck;
+in
+import ./service-checks.nix {
+  inherit
+    mkEvalCheck
+    helpers
+    self
+    ;
+}
+// import ./discord-channel-access-checks.nix {
+  inherit
+    lib
+    mkEvalCheck
+    helpers
+    self
+    ;
+}
+// import ./discord-agents-allowed-to-stay-silent-checks.nix {
+  inherit
+    mkEvalCheck
+    helpers
+    self
+    ;
+}
+// import ./agent-enable-checks.nix {
+  inherit
+    mkEvalCheck
+    helpers
+    self
+    ;
+}
+// import ./agents-denied-destructive-commands-checks.nix {
+  inherit
+    mkEvalCheck
+    helpers
+    self
+    ;
+}
+// import ./harness/harness-checks.nix {
+  inherit
+    pkgs
+    mkEvalCheck
+    helpers
+    self
+    ;
+}
+// import ./steward-launch-config-checks.nix {
+  inherit
+    pkgs
+    mkEvalCheck
+    helpers
+    self
+    ;
+}
+// import ./steward-validation-bound-checks.nix {
+  inherit
+    pkgs
+    mkEvalCheck
+    helpers
+    self
+    ;
+}
+// import ./channel-sidecar-checks.nix {
+  inherit
+    lib
+    mkEvalCheck
+    helpers
+    self
+    ;
+}
+// import ./a2a-peer-checks.nix {
+  inherit
+    lib
+    mkEvalCheck
+    helpers
+    self
+    ;
+}

@@ -1,0 +1,34 @@
+# Codex
+
+## Distribution
+
+Codex builds the upstream release source with a narrow footer customization and retains the matching prebuilt code-mode
+host and companion assets. The footer shortens usage labels, caps displayed task titles, and reserves space for the
+thread identifier. Saved session names and terminal titles retain their complete text. The package runs focused renderer
+tests and limits compilation concurrency to bound memory use. Keep other customization in supported configuration,
+hooks, and the launcher.
+
+## Interactive sessions
+
+The launcher starts a private app-server on a Unix socket for each interactive terminal and stops it when the terminal
+client exits. Package upgrades apply to new launches without requiring existing terminals to close. Explicit remote
+connections and `--no-daemon` retain their native behavior; noninteractive commands and autonomous callers use the
+upstream launch path.
+
+SessionStart derives the session's Servant from the thread ID and names it through that terminal's server.
+UserPromptSubmit asks the current session model to choose a concise title from the conversation's goal and save
+`Servant | session name` through the native naming command, without a separate title-generation request. Existing custom
+titles retain their text; unnamed and first-prompt-preview titles receive a generated name. The command preserves a
+title changed after the hook ran. Sessions awaiting a generated title show the Servant's name without brackets. The
+footer and terminal title display that name. Resume and compaction keep the same identity, while forks derive one from
+their new ID.
+
+Native profiles carry interactive instructions and workspace overrides. Nix deploys their immutable sources separately
+and seeds writable profile files during activation. Codex can save model and reasoning selections into those files;
+rebuilds preserve those selections unless the workspace explicitly declares the corresponding setting. Instructions and
+other workspace settings remain declarative. Profiles reuse the main configuration's merge policy for project trust,
+marketplaces, plugins, and hook approvals. Malformed profile files fail activation without overwriting the file.
+
+The remote app-server accepts configuration writes only to the base user config. The private connection adapter saves
+model and reasoning selections to the selected profile after a successful native acknowledgement, preserving the base
+settings. Other requests retain their native behavior.

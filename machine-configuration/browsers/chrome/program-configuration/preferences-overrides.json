@@ -1,0 +1,23 @@
+{
+  "accessibility": {
+    "caret_browsing": {
+      "enabled": true
+    }
+  },
+  "bookmark_bar": {
+    "show_on_all_tabs": true
+  },
+  "browser": {
+    "theme": {
+      "color_scheme": 2
+    }
+  },
+  "privacy_sandbox": {
+    "first_party_sets_enabled": false,
+    "m1": {
+      "ad_measurement_enabled": false,
+      "fledge_enabled": false,
+      "topics_enabled": false
+    }
+  }
+}

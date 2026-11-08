@@ -1,0 +1,119 @@
+{
+  pkgs,
+  unstable,
+  latest,
+  ...
+}:
+{
+  # List of pkgs installed from nixpkgs. To search, run: nix search wget
+  environment.systemPackages =
+    with pkgs;
+    [
+      alejandra
+      ani-cli
+      awscli2
+      bash
+      bash-completion
+      bats
+      (import ../../../development/development-environments/bun-package.nix { inherit latest; })
+      (import ../../../operating-system/resource-monitoring/btop-package.nix { inherit pkgs; })
+      cacert
+      curl
+      dbeaver-bin
+      deno
+      (discord.override {
+        withOpenASAR = true;
+        withVencord = true; # For customization
+      })
+      docker
+      dust
+      eza
+      fastfetch
+      fd
+      ffmpeg
+
+      fzf
+      gh
+      git
+      chromium
+      google-chrome
+      gnumake
+      htop
+      imv
+      jq
+      just
+      k6
+      ksnip
+      lazydocker
+      lshw
+      mpv
+      mpv-handler
+      mpvc
+      mpv-shim-default-shaders
+      oath-toolkit
+      nix-output-monitor
+      (import ../../../development/system-rebuild/nh-package.nix { inherit pkgs; })
+      nixd
+      nix-prefetch-github
+      nixpkgs-fmt
+      nodejs_22
+      prettier
+      obs-studio
+      obsidian
+      pavucontrol
+      p7zip
+      pipes
+      playerctl
+      pnpm
+      poetry
+      postman
+      pulsemixer
+      scrcpy
+      shellcheck
+      shfmt
+      sqlite
+      tig # git log visualizer
+      tealdeer
+      tmux
+      tree
+      unzip
+      usbutils
+      uv
+      vesktop
+      vim
+      vlc
+      wget
+      whisper-cpp
+      wiremix
+      wireguard-go
+      wireguard-tools
+      wl-clipboard
+      xclip
+      yazi
+      yarn
+      zip
+      zoxide
+    ]
+    # Unstable packages
+    ++ (with unstable; [
+      cargo
+      gcc
+      rustc
+      rustPlatform.rustcSrc
+      openssl.dev
+      openssl
+      SDL2
+      alsa-lib.dev
+      pkg-config
+      supabase-cli
+      terraform # Removed: its broken on nixpkgs
+    ])
+    # Latest packages
+    ++ (with latest; [
+      brave
+      gemini-cli
+    ])
+    ++ [
+      (import ./vivaldi-codec-lib-path-fixed.nix { vivaldiPackages = latest; })
+    ];
+}

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ambient-canvas-recorder</title>
+    <style>
+      :root {
+        --ambient-canvas-background: #0a1a2f;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: var(--ambient-canvas-background);
+        overflow: hidden;
+      }
+      #ambient-canvas-grid {
+        display: grid;
+        width: 100vw;
+        height: 100vh;
+        gap: 2px;
+        background: var(--ambient-canvas-background);
+      }
+      canvas.ambient-canvas-pane {
+        display: block;
+        width: 100%;
+        height: 100%;
+        background: var(--ambient-canvas-background);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="ambient-canvas-grid"></div>
+    <script src="ambient_canvas_palette.js"></script>
+    <script src="scenes/yuruyurau/yuruyurau_setup.js"></script>
+    <script src="scenes/yuruyurau/yuruyurau_scene.js"></script>
+    <script src="scenes/matrix_rain.js"></script>
+    <script src="scenes/bonsai/bonsai_tree.js"></script>
+    <script src="scenes/bonsai/bonsai_scene.js"></script>
+    <script src="scenes/the-link/the_link_shaders.js"></script>
+    <script src="scenes/the-link/the_link_scene.js"></script>
+    <script src="scenes/sixteen-segment/sixteen_segment_geometry.js"></script>
+    <script src="scenes/sixteen-segment/sixteen_segment_field.js"></script>
+    <script src="scenes/sixteen-segment/sixteen_segment_layout.js"></script>
+    <script src="scenes/sixteen-segment/sixteen_segment_scene.js"></script>
+    <script src="scenes/cube-lattice/cube_lattice_shaders.js"></script>
+    <script src="scenes/cube-lattice/cube_lattice_scene.js"></script>
+    <script src="scenes/ascii-invader/ascii_invader_shell.js"></script>
+    <script src="scenes/ascii-invader/ascii_invader_glyph_field.js"></script>
+    <script src="scenes/ascii-invader/ascii_invader_crt_shaders.js"></script>
+    <script src="scenes/ascii-invader/ascii_invader_scene.js"></script>
+    <script src="scenes/ascii-plotter/ascii_plotter_traces.js"></script>
+    <script src="scenes/ascii-plotter/ascii_plotter_schematic.js"></script>
+    <script src="scenes/ascii-plotter/ascii_plotter_scene.js"></script>
+    <script src="scenes/bad-apple/braille_glyph_grid.js"></script>
+    <script src="scenes/bad-apple/braille_frame_renderer.js"></script>
+    <script src="scenes/bad-apple/deterministic_video_stepper.js"></script>
+    <script src="scenes/bad-apple/seekable_video_source.js"></script>
+    <script src="scenes/bad-apple/bad_apple_scene.js"></script>
+    <script src="panes.js"></script>
+    <script src="vendor/mp4-muxer.min.js"></script>
+    <script src="record/ambient-canvas-recording-compositor.js"></script>
+    <script src="record/ambient-canvas-recording-encoder.js"></script>
+    <script src="record/ambient-canvas-recording-fingerprint.js"></script>
+    <script src="record/ambient-canvas-recording-plan.js"></script>
+    <script src="recorder.js"></script>
+    <script src="player.js"></script>
+  </body>
+</html>

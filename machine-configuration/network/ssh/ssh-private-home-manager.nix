@@ -1,0 +1,71 @@
+{
+  config,
+  lib,
+  pkgs,
+  hostname,
+  isDarwin,
+  isNixOS,
+  ...
+}:
+# Adds private-configuration/machines/<hostname>/ssh.nix when that file exists.
+let
+  sshHostsSecretExists = builtins.pathExists ../../../secrets/infrastructure/ssh-hosts.age;
+
+  privateConfigRoot = ../../../private-configuration;
+  privateConfigExists = builtins.pathExists privateConfigRoot;
+  privateSshOverridePath = "${toString privateConfigRoot}/machines/${hostname}/ssh.nix";
+  privateSshOverrideExists = privateConfigExists && builtins.pathExists privateSshOverridePath;
+  isWorkpcLinux = !isDarwin && !isNixOS;
+
+  workpcGenerateScript = pkgs.writeShellApplication {
+    name = "generate-private-ssh-config";
+    runtimeInputs = [ pkgs.coreutils ];
+    text = ''
+      export SSH_HOSTS_FILE="/run/agenix/ssh-hosts"
+      exec ${pkgs.bash}/bin/bash ${./scripts/generate-private-ssh-config.sh}
+    '';
+  };
+in
+{
+  imports = lib.optionals privateSshOverrideExists [
+    privateSshOverridePath
+  ];
+
+  programs.ssh = {
+    enable = true;
+    enableDefaultConfig = false;
+    includes = lib.mkIf sshHostsSecretExists [ "~/.ssh/config.d/*" ];
+
+    matchBlocks = {
+      "*" = { };
+      "github.com" = {
+        hostname = "github.com";
+        user = "git";
+        identityFile = [
+          "~/.ssh/id_ed25519"
+          "~/.ssh/id_rsa"
+        ];
+      };
+    };
+  };
+
+  home = {
+    file.".ssh/config".target = lib.mkIf isNixOS ".ssh/config.nix-source";
+
+    activation = {
+      materializeUserOwnedSshConfig = lib.mkIf isNixOS (
+        lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+          run ${pkgs.python312}/bin/python3 ${./scripts/materialize_ssh_config.py} \
+            ${config.home.file.".ssh/config".source} \
+            ${lib.escapeShellArg "${config.home.homeDirectory}/.ssh/config"}
+        ''
+      );
+
+      generatePrivateSshConfig = lib.mkIf (sshHostsSecretExists && isWorkpcLinux) (
+        lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+          run ${workpcGenerateScript}/bin/generate-private-ssh-config
+        ''
+      );
+    };
+  };
+}

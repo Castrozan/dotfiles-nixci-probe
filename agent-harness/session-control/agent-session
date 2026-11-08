@@ -1,0 +1,34 @@
+set -euo pipefail
+
+if [[ "${1:-}" == "exit" && "${2:-}" == "--print-target" && "$#" -eq 2 ]]; then
+	if [[ -z "${HERDR_PANE_ID:-}" ]]; then
+		echo "No enclosing Herdr pane was found." >&2
+		exit 1
+	fi
+	exec herdr agent get "$HERDR_PANE_ID"
+fi
+
+if [[ "$#" -ne 1 || ("$1" != "restart" && "$1" != "compact" && "$1" != "exit") ]]; then
+	echo "usage: agent-session restart | agent-session compact | agent-session exit [--print-target]" >&2
+	exit 2
+fi
+if [[ "$1" != "compact" && -n "${CLAWDE_AGENT_NAME:-}" ]]; then
+	echo "Clawde-managed sessions must be relaunched by their wrapper." >&2
+	exit 1
+fi
+if [[ -z "${HERDR_PANE_ID:-}" ]]; then
+	echo "No enclosing Herdr pane was found." >&2
+	exit 1
+fi
+
+if [[ "$1" == "compact" ]]; then
+	launch-command-detached-into-new-session /dev/null agent-session-compact-when-idle "$HERDR_PANE_ID" >/dev/null
+	echo "Compaction is queued and starts when this turn ends."
+	exit 0
+fi
+if [[ "$1" == "restart" ]]; then
+	agent_get_response="$(herdr agent get "$HERDR_PANE_ID")"
+	printf '%s\n' "$agent_get_response" | agent-session-restart-preflight
+	exec herdr agent restart --prompt "This session was restarted. Continue from where you left off."
+fi
+exec herdr agent exit

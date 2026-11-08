@@ -1,0 +1,164 @@
+{
+  helpers,
+  pkgs,
+  lib,
+  ...
+}:
+let
+  inherit (helpers) mkEvalCheck;
+  interactiveAgentSkills =
+    import
+      ../../../../agent-harness/agent-instructions/interactive-skill-catalog/interactive-agent-skills.nix
+      {
+        hostname = "test";
+        inherit pkgs;
+      };
+
+  cfg = helpers.homeManagerTestConfigurationForEvaluatingSystem [ ../. ];
+  packageNames = map (p: p.name or p.pname or "unknown") cfg.home.packages;
+  hasPackageMatching = pattern: builtins.any (n: builtins.match pattern n != null) packageNames;
+
+  deployedFileNames = builtins.attrNames cfg.home.file;
+  hasDeployedFilePrefix =
+    prefix:
+    builtins.any (
+      name: builtins.substring 0 (builtins.stringLength prefix) name == prefix
+    ) deployedFileNames;
+
+  parseDeployedJson =
+    deployedText: builtins.fromJSON (builtins.unsafeDiscardStringContext deployedText);
+
+  deployedOpencodeSettings = parseDeployedJson cfg.home.file.".config/opencode/opencode.json".text;
+  deployedTuiSettings = parseDeployedJson cfg.home.file.".config/opencode/cli.json".text;
+  deployedGlobalRules = cfg.home.file.".config/opencode/AGENTS.md".source;
+  deployedHookBridge = cfg.home.file.".config/opencode/plugins/rulesync-hooks.js";
+  opencodeWrapperSource = builtins.readFile ../scripts/launch_opencode.sh;
+  opencodeGoProvider = import ../go-provider.nix { inherit (cfg.home) homeDirectory; };
+
+  codexGlobalInstructions =
+    (import ../../codex/global-instructions.nix { config = cfg; }).home.file.".codex/AGENTS.md".source;
+
+  modelProviderOf = model: builtins.head (lib.splitString "/" model);
+
+  providersThisMachineCanAuthenticate = [
+    "opencode-go"
+    "opencode"
+  ];
+in
+{
+  domain-opencode-package =
+    mkEvalCheck "domain-opencode-package" (hasPackageMatching ".*opencode.*")
+      "opencode package should be installed";
+
+  domain-opencode-bin-wrapper =
+    mkEvalCheck "domain-opencode-bin-wrapper" (builtins.hasAttr ".local/bin/opencode" cfg.home.file)
+      ".local/bin/opencode should be in home.file";
+
+  domain-opencode-unwrapped-package-is-exposed =
+    mkEvalCheck "domain-opencode-unwrapped-package-is-exposed"
+      (cfg.opencode.unwrappedPackage.name == "opencode")
+      "an autonomous harness launches this package instead of the interactive wrapper, and clawde symlinks it onto the agent's PATH as `opencode`, so it must keep providing a binary of that name. It is no longer the bare upstream release: that one never reads OPENCODE_API_KEY, which left every agent on a paid opencode-go model unauthenticated while the free tier hid the fault";
+
+  domain-opencode-default-model-resolves-against-an-authenticated-provider =
+    mkEvalCheck "domain-opencode-default-model-resolves-against-an-authenticated-provider"
+      (
+        builtins.elem (modelProviderOf deployedOpencodeSettings.model) providersThisMachineCanAuthenticate
+        && builtins.elem (modelProviderOf deployedOpencodeSettings.agents.title.model) providersThisMachineCanAuthenticate
+      )
+      "both defaults must resolve against a provider this machine can authenticate: `opencode-go` through the agenix key on the paid Go plan, or `opencode` through the logged-in OpenAI OAuth token, so opencode opens on a model it can actually call";
+
+  domain-opencode-default-models-use-free-zen-models =
+    mkEvalCheck "domain-opencode-default-models-use-free-zen-models"
+      (
+        deployedOpencodeSettings.model == "opencode/big-pickle"
+        && deployedOpencodeSettings.agents.title.model == "opencode/deepseek-v4.1-flash-free"
+      )
+      "the interactive default runs opencode's free big-pickle model and title generation runs the free deepseek flash model, so neither depends on the paid Go plan";
+
+  domain-opencode-go-provider-exposes-one-model-selection =
+    mkEvalCheck "domain-opencode-go-provider-exposes-one-model-selection"
+      (
+        !(opencodeGoProvider ? claudeCodeModels)
+        &&
+          builtins.attrNames opencodeGoProvider.models == [
+            "haiku"
+            "opus"
+            "sonnet"
+          ]
+      )
+      "Console Go's Anthropic endpoint drops tool names, and claude-go answers that by translating locally rather than by running different models, so a second per-harness model set would silently split the two surfaces again";
+
+  domain-opencode-default-agent-runs-at-max-effort =
+    mkEvalCheck "domain-opencode-default-agent-runs-at-max-effort"
+      (
+        deployedOpencodeSettings.agents.build.model == "opencode/big-pickle#max"
+        && deployedOpencodeSettings.agents.build.mode == "primary"
+      )
+      "opencode's default build agent must be primary and run at max reasoning effort";
+
+  domain-opencode-global-rules-match-the-codex-surface =
+    pkgs.runCommand "domain-opencode-global-rules-match-the-codex-surface" { }
+      ''
+        cmp ${deployedGlobalRules} ${codexGlobalInstructions}
+        touch "$out"
+      '';
+
+  domain-opencode-loads-the-global-rules =
+    mkEvalCheck "domain-opencode-loads-the-global-rules"
+      (builtins.elem "~/.config/opencode/AGENTS.md" deployedOpencodeSettings.instructions)
+      "opencode must load the deployed global rules through its instructions list";
+
+  domain-opencode-runs-with-full-access = mkEvalCheck "domain-opencode-runs-with-full-access" (
+    deployedOpencodeSettings.permissions == [
+      {
+        action = "*";
+        resource = "*";
+        effect = "allow";
+      }
+    ]
+  ) "opencode must run without approval prompts, matching Claude's bypassPermissions posture";
+
+  domain-opencode-enables-language-servers-and-formatters =
+    mkEvalCheck "domain-opencode-enables-language-servers-and-formatters"
+      (deployedOpencodeSettings.lsp.pyright.env.PYTHONPATH != "" && deployedOpencodeSettings.formatter)
+      "opencode must enable its built-in LSP servers and formatters with the Python test environment available to Pyright";
+
+  domain-opencode-allows-nested-subagents = mkEvalCheck "domain-opencode-allows-nested-subagents" (
+    deployedOpencodeSettings.experimental.subagent_depth >= 2
+  ) "opencode must let a subagent launch its own subagents, matching Claude's nesting";
+
+  domain-opencode-deploys-subagent-definitions =
+    mkEvalCheck "domain-opencode-deploys-subagent-definitions"
+      (builtins.hasAttr ".config/opencode/agent" cfg.home.file)
+      "the shared subagent definitions must be translated into opencode's agent directory";
+
+  domain-opencode-loads-complete-plugin-skills =
+    mkEvalCheck "domain-opencode-loads-complete-plugin-skills"
+      (
+        builtins.hasAttr ".config/opencode/opencode.jsonc" cfg.home.file
+        && !(deployedOpencodeSettings ? skills)
+        && !(deployedOpencodeSettings ? mcp)
+        && !(hasDeployedFilePrefix ".config/opencode/skills/")
+      )
+      "OpenCode must natively compose emitted discovery settings without reconstructing skills or MCP declarations";
+
+  domain-opencode-deploys-hook-bridge =
+    mkEvalCheck "domain-opencode-deploys-hook-bridge"
+      (
+        deployedHookBridge ? source
+        && deployedHookBridge.source == "${cfg.agentPlugins.bundle}/plugin/native/opencode/hooks"
+        && !(cfg.home.file ? ".config/opencode/plugins/dotfiles-hook-bridge")
+      )
+      "OpenCode must deploy one Rulesync-generated V2 hook plugin with Nix-resolved commands and remove the previous duplicate bridge";
+
+  domain-opencode-marks-interactive-sessions =
+    mkEvalCheck "domain-opencode-marks-interactive-sessions"
+      (lib.hasInfix "AGENT_INTERACTIVE_PREFERENCES_PATH" opencodeWrapperSource)
+      "the interactive OpenCode wrapper must mark keyboard-driven sessions so shared prompt and subagent hook guards run there while unwrapped autonomous sessions remain excluded";
+
+  domain-opencode-tui-matches-the-desktop-theme =
+    mkEvalCheck "domain-opencode-tui-matches-the-desktop-theme"
+      (deployedTuiSettings.theme.name == "kanagawa" && deployedTuiSettings.attention.notifications)
+      "opencode's TUI must follow the machine's selected theme and notify when a turn finishes";
+}
+// import ./native-checks.nix { inherit pkgs lib cfg; }

@@ -1,0 +1,133 @@
+import subprocess
+import re
+from pathlib import Path
+
+import yaml
+import pytest
+
+from continuous_integration_workflows import executable_workflow_jobs
+
+REPOSITORY_ROOT = Path(__file__).resolve().parents[5]
+TESTS_WORKFLOW = REPOSITORY_ROOT / ".github" / "workflows" / "tests.yml"
+DISCOVERY_LIBRARY = (
+    REPOSITORY_ROOT / "repository" / "verification" / "runner" / "discovery.sh"
+)
+
+PYTEST_TIERS_THAT_MUST_RUN_IN_CONTINUOUS_INTEGRATION = ("unit", "integration")
+
+
+def jobs_invoking_a_pytest_tier():
+    return {
+        name: job
+        for name, job in executable_workflow_jobs(TESTS_WORKFLOW, REPOSITORY_ROOT)
+        if any(
+            "_run_pytest_tier" in str(step.get("run", ""))
+            for step in job.get("steps", [])
+        )
+    }
+
+
+def tiers_invoked_by_the_tests_workflow():
+    return {
+        tier
+        for job in jobs_invoking_a_pytest_tier().values()
+        for step in job.get("steps", [])
+        for tier in re.findall(
+            r"_run_pytest_tier\s+(unit|integration)\b", str(step.get("run", ""))
+        )
+    }
+
+
+def discovered_test_files_in_tier(tier_directory_name):
+    completed = subprocess.run(
+        [
+            "bash",
+            "-c",
+            f'export REPO_DIR="{REPOSITORY_ROOT}"; source "{DISCOVERY_LIBRARY}"; '
+            f'_discover_test_files platform-scoped "*/__tests__/{tier_directory_name}/test_*.py"',
+        ],
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    assert completed.returncode == 0, (
+        "discovery failed to run, so every tier below would look empty and this gate "
+        "would pass without inspecting anything. A moved discovery library is the "
+        f"usual cause. Exit {completed.returncode}, stderr: {completed.stderr}"
+    )
+    return [line for line in completed.stdout.splitlines() if line.strip()]
+
+
+def test_every_pytest_tier_holding_tests_is_invoked_by_continuous_integration():
+    invoked_tiers = tiers_invoked_by_the_tests_workflow()
+    uncovered_tiers = {
+        tier: len(discovered_test_files_in_tier(tier))
+        for tier in PYTEST_TIERS_THAT_MUST_RUN_IN_CONTINUOUS_INTEGRATION
+        if tier not in invoked_tiers and discovered_test_files_in_tier(tier)
+    }
+    assert not uncovered_tiers, (
+        "run.sh discovers these tiers locally but no workflow invokes them, so the "
+        "tests in them gate nothing on a push and can rot unnoticed. Tier -> file "
+        f"count: {uncovered_tiers}. Workflow invokes: {sorted(invoked_tiers)}"
+    )
+
+
+def test_continuous_integration_supplies_the_binaries_the_suite_shells_out_to():
+    assert any(
+        "test-suite-environment.nix" in str(step.get("run", ""))
+        or "test-suite-environment.nix" in str(job.get("env", {}))
+        for job in jobs_invoking_a_pytest_tier().values()
+        for step in job.get("steps", [])
+    ), (
+        "the pytest jobs run inside a nix shell built from an expression, so every "
+        "binary the tests shell out to has to come from that expression rather than "
+        "from the runner image; a hook that shells out to a binary missing from the "
+        "shell fails with an unparseable empty hook response"
+    )
+
+
+def test_continuous_integration_checks_out_the_history_the_suite_reads():
+    jobs_checking_out_shallow = [
+        job_name
+        for job_name, job in jobs_invoking_a_pytest_tier().items()
+        for step in job["steps"]
+        if str(step.get("uses", "")).startswith("actions/checkout")
+        and (step.get("with") or {}).get("fetch-depth") != 0
+    ]
+    assert not jobs_checking_out_shallow, (
+        "actions/checkout defaults to a single commit of history, and the git-history "
+        "skill dumps and greps real commits, so its integration tests fail on a "
+        f"shallow checkout. Jobs needing fetch-depth 0: {jobs_checking_out_shallow}"
+    )
+
+
+@pytest.mark.parametrize("fetch_depth", [0, 1])
+def test_history_guard_handles_reusable_jobs_without_accepting_shallow_history(
+    tmp_path, monkeypatch, fetch_depth
+):
+    workflow = tmp_path / "tests.yml"
+    workflow.write_text(
+        yaml.safe_dump(
+            {
+                "jobs": {
+                    "artifact": {"uses": "./.github/workflows/quality-evidence.yml"},
+                    "python": {
+                        "steps": [
+                            {
+                                "uses": "actions/checkout@v4",
+                                "with": {"fetch-depth": fetch_depth},
+                            },
+                            {"run": "_run_pytest_tier unit quick"},
+                        ]
+                    },
+                }
+            }
+        )
+    )
+    monkeypatch.setattr(__import__(__name__), "TESTS_WORKFLOW", workflow)
+    assert set(jobs_invoking_a_pytest_tier()) == {"python"}
+    if fetch_depth == 0:
+        test_continuous_integration_checks_out_the_history_the_suite_reads()
+    else:
+        with pytest.raises(AssertionError, match="shallow checkout"):
+            test_continuous_integration_checks_out_the_history_the_suite_reads()

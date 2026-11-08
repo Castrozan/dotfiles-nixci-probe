@@ -1,0 +1,172 @@
+import assert from "node:assert/strict";
+import { EventEmitter } from "node:events";
+import { resolve } from "node:path";
+import { test } from "node:test";
+import { pathToFileURL } from "node:url";
+
+const sourceDirectory = `${resolve(process.env.CHROME_DEVTOOLS_MCP_PACKAGE)}/build/src`;
+await import(pathToFileURL(`${sourceDirectory}/utils/polyfill.js`));
+const { McpPage } = await import(
+  pathToFileURL(`${sourceDirectory}/McpPage.js`)
+);
+const { BrowserManager } = await import(
+  pathToFileURL(`${sourceDirectory}/BrowserManager.js`)
+);
+const { McpContext } = await import(
+  pathToFileURL(`${sourceDirectory}/McpContext.js`)
+);
+const { DevTools, puppeteer } = await import(
+  pathToFileURL(`${sourceDirectory}/third_party/index.js`)
+);
+const { overrideDevToolsGlobals } = await import(
+  pathToFileURL(`${sourceDirectory}/devtools/DevtoolsUtils.js`)
+);
+
+overrideDevToolsGlobals({
+  loadResource: async () => ({ success: false, content: "" }),
+});
+
+function createPage() {
+  const page = new EventEmitter();
+  const frame = new EventEmitter();
+  const session = new EventEmitter();
+  const calls = { created: 0, detached: 0, focusOverrides: [] };
+  session.id = () => "test-session";
+  session.target = () => ({ _targetId: "test-target" });
+  session.connection = () => ({ session: () => session });
+  session.send = async (method) =>
+    method === "Debugger.enable" ? { debuggerId: "test-debugger" } : {};
+  session.detach = async () => {
+    calls.detached++;
+    session.removeAllListeners();
+  };
+  page.mainFrame = () => frame;
+  page._client = () => session;
+  page.emulateFocusedPage = async (enabled) => {
+    calls.focusOverrides.push(enabled);
+  };
+  page.createCDPSession = async () => {
+    calls.created++;
+    return session;
+  };
+  return { page, session, calls };
+}
+
+test("enumerating fifteen pages preserves background throttling", async () => {
+  const fixtures = Array.from({ length: 15 }, createPage);
+  const browserContext = {};
+  for (const { page } of fixtures) {
+    page.url = () => "https://example.com";
+    page.browserContext = () => browserContext;
+    page.isClosed = () => false;
+    page.setDefaultTimeout = () => {};
+    page.setDefaultNavigationTimeout = () => {};
+  }
+  const browser = new EventEmitter();
+  browser.pages = async () => fixtures.map(({ page }) => page);
+  browser.defaultBrowserContext = () => browserContext;
+  browser.browserContexts = () => [browserContext];
+  const context = new McpContext(browser, undefined, {});
+  try {
+    assert.equal((await context.createPagesSnapshot()).length, 15);
+    assert.equal((await context.createPagesSnapshot()).length, 15);
+    for (const { calls } of fixtures) {
+      assert.equal(calls.created, 0);
+      assert.deepEqual(calls.focusOverrides, []);
+    }
+  } finally {
+    context.dispose();
+  }
+});
+
+test("concurrent requests share one session and disposal prevents recreation", async () => {
+  const { page, calls } = createPage();
+  const managedPage = new McpPage(page, 1, {});
+  const universes = await Promise.all(
+    Array.from({ length: 10 }, () => managedPage.ensureDevtoolsUniverse()),
+  );
+  assert.ok(universes[0]);
+  assert.ok(universes.every((universe) => universe === universes[0]));
+  assert.equal(calls.created, 1);
+  managedPage.dispose();
+  assert.equal(calls.detached, 1);
+  assert.equal(await managedPage.ensureDevtoolsUniverse(), undefined);
+  assert.equal(calls.created, 1);
+});
+
+test("closing a page during initialization detaches the late session", async () => {
+  const { page, session, calls } = createPage();
+  let completeInitialization;
+  page.createCDPSession = () =>
+    new Promise((resolveSession) => {
+      completeInitialization = resolveSession;
+    });
+  const managedPage = new McpPage(page, 1, {});
+  const initialization = managedPage.ensureDevtoolsUniverse();
+  managedPage.dispose();
+  completeInitialization(session);
+  assert.equal(await initialization, undefined);
+  assert.equal(calls.detached, 1);
+  assert.equal(managedPage.devtoolsUniverse, undefined);
+});
+
+test("failed initialization can be retried without retaining a rejected promise", async () => {
+  const { page, session } = createPage();
+  let attempts = 0;
+  page.createCDPSession = async () => {
+    if (++attempts === 1) throw new Error("Connection interrupted");
+    return session;
+  };
+  const managedPage = new McpPage(page, 1, {});
+  assert.equal(await managedPage.ensureDevtoolsUniverse(), undefined);
+  assert.ok(await managedPage.ensureDevtoolsUniverse());
+  assert.equal(attempts, 2);
+  managedPage.dispose();
+});
+
+test("a lost CDP session returns a protocol error without an uncaught exception", async () => {
+  const { session } = createPage();
+  session.connection = () => ({ session: () => undefined });
+  const connection = new DevTools.PuppeteerDevToolsConnection(session);
+  let response;
+  assert.doesNotThrow(() => {
+    response = connection.send("Runtime.enable", {}, "expired-session");
+  });
+  assert.match((await response).error.message, /Unknown session/);
+  connection.dispose("test complete");
+  assert.equal(session.eventNames().length, 0);
+});
+
+test("a disconnected attached browser requires a new scoped connection", async (context) => {
+  let connections = 0;
+  let disconnections = 0;
+  context.mock.method(puppeteer, "connect", async () => {
+    connections++;
+    return {
+      connected: true,
+      disconnect: async () => disconnections++,
+      close: async () => assert.fail("Attached Chrome must remain running"),
+    };
+  });
+  const manager = new BrowserManager({ autoConnect: true, channel: "stable" });
+  const original = await manager.ensureBrowser();
+  assert.equal(await manager.ensureBrowser(), original);
+  original.connected = false;
+  await assert.rejects(manager.ensureBrowser(), /start a new connection/);
+  assert.equal(connections, 1);
+  await manager.close();
+  assert.equal(disconnections, 0);
+});
+
+test("a failed attached connection cannot silently request consent again", async (context) => {
+  let attempts = 0;
+  context.mock.method(puppeteer, "connect", async () => {
+    attempts++;
+    throw new Error("User cancelled debugging permission");
+  });
+  const manager = new BrowserManager({ autoConnect: true, channel: "stable" });
+  await assert.rejects(manager.ensureBrowser(), /Could not connect/);
+  await assert.rejects(manager.ensureBrowser(), /start a new connection/);
+  assert.equal(attempts, 1);
+  await manager.close();
+});

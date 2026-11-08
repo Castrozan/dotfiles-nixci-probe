@@ -1,0 +1,17 @@
+target-version = "py312"
+
+[lint]
+select = ["E4", "E7", "E9", "F", "B", "S"]
+extend-select = ["ASYNC210", "ASYNC251", "RUF006"]
+ignore = ["S603", "S607"]
+
+[lint.per-file-ignores]
+"**/__tests__/**" = ["S101"]
+"agent-harness/agent-instructions/skills/workstation/browser/install/scripts/chrome-devtools/chrome_devtools_command.py" = ["S606"]
+"agent-harness/agent-instructions/skills/workstation/browser/install/scripts/chrome-devtools/chrome_devtools_session.py" = ["S108"]
+"agent-harness/agent-instructions/skills/workstation/browser/install/scripts/opencli/opencli_browser.py" = ["S606"]
+"agent-harness/agent-instructions/skills/workstation/browser/install/scripts/opencli/opencli_command.py" = ["S606"]
+"agent-harness/agent-instructions/skills/workstation/browser/install/scripts/opencli/opencli_exec.py" = ["S606"]
+"agent-harness/harnesses/clawde/discord/voice-bridge/scripts/voice_bridge/speech_synthesis.py" = ["S310"]
+"machine-configuration/development/version-control/scripts/refresh_gitlab_contribution_heatmap.py" = ["S310"]
+"machine-configuration/media/avatar/scripts/listening/cloud_transcriber.py" = ["S310"]

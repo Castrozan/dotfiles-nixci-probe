@@ -1,0 +1,87 @@
+{
+  outputs = _: { };
+
+  inputs = {
+    # For stable packages definitions
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
+    # For packages not yet in nixpkgs
+    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+    # For latest bleeding edge packages - daily* updated with: $ nix flake update dependencies/nixpkgs-latest
+    nixpkgs-latest.url = "github:nixos/nixpkgs/nixos-unstable";
+    home-manager.url = "github:nix-community/home-manager/release-26.05";
+    home-manager.inputs.nixpkgs.follows = "nixpkgs";
+
+    # nix-darwin for the macbook host. Inert on Linux activations.
+    nix-darwin.url = "github:nix-darwin/nix-darwin/nix-darwin-26.05";
+    nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
+
+    # Theming used by the macbook host (and any Linux host that opts in).
+    stylix.url = "github:danth/stylix/release-26.05";
+    stylix.inputs.nixpkgs.follows = "nixpkgs";
+
+    # Private assets repo, a different repository from the private-configuration/
+    # submodule; exposed as a flake input so darwin modules take it via inputs.
+    # Its own modules read inputs.private-config, so the input keeps the name
+    # GitHub gives the repo rather than the name this tree gives its boundary.
+    private-config = {
+      url = "git+ssh://git@github.com/Castrozan/private-config";
+      flake = false;
+    };
+
+    arr-stack = {
+      url = "git+ssh://git@github.com/Castrozan/arr-stack";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.home-manager.follows = "home-manager";
+    };
+
+    clawde.url = "github:Castrozan/clawde/cb42491801a1529750d3ab4557c7c0c59bccea33";
+    clawde.inputs.nixpkgs.follows = "nixpkgs";
+
+    agent-evals.url = "github:Castrozan/agent-evals/4c4f81827d428f80bb8beae6165ea7cb76b18e31";
+    agent-evals.inputs.nixpkgs.follows = "nixpkgs";
+
+    hermes.url = "github:NousResearch/hermes-agent/2bd378ed1b8d6bf2192cb26e0a55ff3091e6bd19";
+
+    # Tag-pinned — keep own nixpkgs (incompatible or untested with ours)
+    systemd-manager-tui.url = "github:matheus-git/systemd-manager-tui";
+    systemd-manager-tui.inputs.nixpkgs.follows = "nixpkgs";
+    devenv.url = "github:cachix/devenv/v2.2.1";
+    bluetui.url = "github:castrozan/bluetui/v0.9.1";
+    hyprland.url = "github:hyprwm/Hyprland/v0.55.2";
+    herdr.url = "github:Castrozan/herdr/8a1d2dd9a31f9c6382602e0b22d3e326ac570738";
+    herdr-pace.url = "github:Castrozan/herdr-pace/ebc5f13ab98a589edff867e75a9cb9181131d1f0";
+    herdr-pace.inputs.nixpkgs.follows = "nixpkgs";
+
+    # Own forks — follow nixpkgs (tested, no version-sensitive deps)
+    cbonsai.url = "github:castrozan/cbonsai";
+    cbonsai.inputs.nixpkgs.follows = "nixpkgs";
+    cmatrix.url = "github:castrozan/cmatrix";
+    cmatrix.inputs.nixpkgs.follows = "nixpkgs";
+    tuisvn.url = "github:castrozan/tuisvn";
+    tuisvn.inputs.nixpkgs.follows = "nixpkgs";
+    install-nothing.url = "github:castrozan/install-nothing";
+    install-nothing.inputs.nixpkgs.follows = "nixpkgs";
+    lazygit.url = "github:Castrozan/lazygit";
+    lazygit.inputs.nixpkgs.follows = "nixpkgs";
+    viu.url = "github:viu-media/viu";
+    viu.inputs.nixpkgs.follows = "nixpkgs";
+
+    # Well-maintained, nixpkgs-agnostic
+    nixgl.url = "github:nix-community/nixGL";
+    nixgl.inputs.nixpkgs.follows = "nixpkgs";
+    agenix.url = "github:ryantm/agenix";
+    agenix.inputs.nixpkgs.follows = "nixpkgs";
+
+    # Local dictation uses the host libraries so Vulkan and glibc agree.
+    hex = {
+      url = "github:anomalyco/hex";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.home-manager.follows = "home-manager";
+    };
+
+    # Third-party — keep own nixpkgs
+    voxtype.url = "github:peteonrails/voxtype";
+    whisp-away.url = "github:madjinn/whisp-away";
+    google-workspace-cli.url = "github:googleworkspace/cli/a3768d0e82ad83cca2da97724e46bea4ff0e6dbd";
+  };
+}

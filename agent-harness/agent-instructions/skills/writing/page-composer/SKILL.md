@@ -1,0 +1,37 @@
+---
+name: page-composer
+description: Build a web page section by section through the compose-page workflow with a per-section meaning gate. Use for building, creating, or composing web and landing pages.
+---
+
+### Workflow boundary
+
+Build the page the user describes by invoking the `compose-page` workflow (Workflow tool, name `compose-page`; where
+`Workflow` is unavailable, `dotfiles-compose-page --brief <brief> --output <path> --constraints <constraints>`). Never
+hand-scaffold the markup yourself, which reproduces the random-skeleton-of-placeholders failure this skill exists to
+prevent.
+
+### Visual direction
+
+Load [frontend-design](../frontend-design/SKILL.md) before invoking the workflow. Include its concrete visual direction
+in `constraints`, preserving the user's design tokens, voice and factual limits.
+
+### Invocation
+
+Pass the workflow an args object. `brief` is the subject, the audience, and the single action the page drives, drawn
+from the user's request. `output` is the target format, defaulting to a self-contained semantic HTML5 file with one
+inline style block when the brief is silent. `constraints` carry design tokens, voice, length, and anything the content
+must not invent. The workflow throws without a `brief`, so resolve one from the request or ask for it before invoking
+rather than passing an empty brief.
+
+### After it returns
+
+The workflow returns the thesis, the section spine, the per-section gate outcomes, and the assembled `page`. Write
+`page` to the file the brief names, or a sensible path in the target project, and report the thesis plus which sections
+the final gate accepted or revised so the meaning trail stays visible. Do not edit the returned markup to satisfy a
+requirement the gate ignores. The gate judges content meaning, not visual-spec compliance, so a missed theme or token
+belongs back in `constraints` on a re-invocation, not in a hand-patch that detaches the page from its proof.
+
+### Workflow authority
+
+The phases, schemas, and gate criteria live in the deployed `compose-page` workflow, the single source of truth; this
+skill only drives it.

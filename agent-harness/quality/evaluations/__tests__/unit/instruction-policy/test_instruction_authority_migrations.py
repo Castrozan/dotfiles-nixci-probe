@@ -1,0 +1,140 @@
+import re
+
+from instructions.instruction_surface_scanner import REPO_ROOT
+
+
+INSTRUCTION_DIRECTORY = REPO_ROOT / "agent-harness/agent-instructions"
+AGENT_HARNESS_SKILL_PATH = (
+    INSTRUCTION_DIRECTORY / "skills" / "agent-workflows" / "agent-harness" / "SKILL.md"
+)
+AUTHORITY_RECIPE_PATH = (
+    AGENT_HARNESS_SKILL_PATH.parent / "references" / "instruction-authority.md"
+)
+CORE_COMPLEMENT_REQUIREMENTS = {
+    INSTRUCTION_DIRECTORY
+    / "core-rules"
+    / "adaptive-implementation-delivery-process.md": ("#delegation)",),
+    AGENT_HARNESS_SKILL_PATH: ("#evidence)", "#completion)", "#coding)"),
+    INSTRUCTION_DIRECTORY / "skills" / "agent-workflows" / "deep-work" / "SKILL.md": (
+        "#context)",
+    ),
+    INSTRUCTION_DIRECTORY / "skills" / "agent-workflows" / "deliver" / "SKILL.md": (
+        "#evidence)",
+        "#autonomy)",
+        "#completion)",
+        "#delegation)",
+        "#context)",
+        "#coding)",
+    ),
+    INSTRUCTION_DIRECTORY / "skills" / "development" / "explore" / "SKILL.md": (
+        "#evidence)",
+    ),
+    INSTRUCTION_DIRECTORY / "interactive-communication.md": (
+        "#evidence)",
+        "#autonomy)",
+        "#completion)",
+    ),
+    INSTRUCTION_DIRECTORY / "skills" / "agent-workflows" / "orchestrate" / "SKILL.md": (
+        "#delegation)",
+        "#completion)",
+    ),
+    INSTRUCTION_DIRECTORY / "skills" / "knowledge" / "research" / "SKILL.md": (
+        "#evidence)",
+        "#autonomy)",
+    ),
+    INSTRUCTION_DIRECTORY / "skills" / "development" / "review" / "SKILL.md": (
+        "#evidence)",
+        "#completion)",
+        "#coding)",
+    ),
+    INSTRUCTION_DIRECTORY
+    / "skills"
+    / "agent-workflows"
+    / "instructions"
+    / "references"
+    / "subagent-briefs.md": ("#delegation)",),
+}
+INTERACTIVE_CONTRACT_PATH = INSTRUCTION_DIRECTORY / "interactive-communication.md"
+HERMES_DIRECTORY = REPO_ROOT / "agent-harness" / "harnesses" / "hermes"
+
+
+def normalized_text(path):
+    return re.sub(r"\s+", " ", path.read_text(encoding="utf-8"))
+
+
+def test_agent_harness_routes_instruction_authority_diagnosis_to_one_recipe():
+    skill = AGENT_HARNESS_SKILL_PATH.read_text(encoding="utf-8")
+    recipe = AUTHORITY_RECIPE_PATH.read_text(encoding="utf-8")
+
+    assert "(references/instruction-authority.md)" in skill
+    for section in (
+        "behavior_contract",
+        "runtime_trace",
+        "owner_selection",
+        "relationship_classification",
+        "authority_move",
+        "verification",
+    ):
+        assert "### " + section.replace("_", " ").capitalize() in recipe
+
+    for required_distinction in (
+        "trigger, action, material exceptions",
+        "generated copy",
+        "runtime injection",
+        "deterministic control",
+        "ordinary request",
+    ):
+        assert required_distinction in normalized_text(AUTHORITY_RECIPE_PATH)
+
+
+def test_every_migrated_complement_points_to_its_core_authority():
+    missing_links = {
+        str(path.relative_to(REPO_ROOT)): [
+            authority
+            for authority in authorities
+            if authority not in path.read_text(encoding="utf-8")
+        ]
+        for path, authorities in CORE_COMPLEMENT_REQUIREMENTS.items()
+        if any(
+            authority not in path.read_text(encoding="utf-8")
+            for authority in authorities
+        )
+    }
+
+    assert not missing_links
+
+
+def test_interactive_contract_does_not_restate_general_core_decision_thresholds():
+    interactive_policy = normalized_text(INTERACTIVE_CONTRACT_PATH)
+
+    for retired_duplicate in (
+        "When challenged, verify the relevant evidence before defending or retracting",
+        "Ask only when an unresolved choice would materially change the outcome",
+        "Return only when the task is done",
+    ):
+        assert retired_duplicate not in interactive_policy
+
+
+def test_hermes_carries_only_managed_core_and_plugin_skills():
+    soul_source = (HERMES_DIRECTORY / "soul.nix").read_text(encoding="utf-8")
+    launcher_source = (HERMES_DIRECTORY / "scripts" / "hermes-launch").read_text(
+        encoding="utf-8"
+    )
+    configuration_source = (HERMES_DIRECTORY / "config.nix").read_text(encoding="utf-8")
+    deployment_source = (HERMES_DIRECTORY / "hermes.nix").read_text(encoding="utf-8")
+
+    assert "agent-instructions/rulesync" in soul_source
+    assert "hermesagent/.hermes.md" in soul_source
+    assert "HERMES_AGENT_SOUL" in launcher_source
+    assert "system_prompt" not in configuration_source
+    assert (
+        '".hermes/plugins/dotfiles".source = "${config.agentPlugins.bundle}/plugin"'
+        in deployment_source
+    )
+    for retired_surface in (
+        "HERMES_AGENT_HUMANIZE_SKILL",
+        "HERMES_AGENT_DOCS_SKILL",
+        "HERMES_AGENT_MEMORY_SYNCHRONIZER",
+    ):
+        assert retired_surface not in launcher_source
+        assert retired_surface not in deployment_source

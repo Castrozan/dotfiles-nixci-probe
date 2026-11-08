@@ -1,0 +1,173 @@
+import json
+import os
+import pathlib
+import re
+
+import pytest
+
+
+REPO_ROOT = pathlib.Path(__file__).resolve().parents[5]
+THIS_TEST_FILE = pathlib.Path(__file__).resolve()
+
+
+SKIP_DIRECTORY_NAMES = {
+    ".git",
+    "node_modules",
+    "result",
+    "__pycache__",
+    ".direnv",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".devenv",
+    "private-configuration",
+    ".worktrees",
+    ".deep-work",
+}
+
+
+def _walk_repo_paths_filtered():
+    for root, dirs, files in os.walk(REPO_ROOT):
+        dirs[:] = [
+            directory
+            for directory in dirs
+            if directory not in SKIP_DIRECTORY_NAMES
+            and not directory.startswith("result-")
+        ]
+        root_path = pathlib.Path(root)
+        for file_name in files:
+            yield root_path / file_name
+
+
+def _collect_files_with_extension(extension):
+    return [path for path in _walk_repo_paths_filtered() if path.suffix == extension]
+
+
+def _path_is_in_chise_host_tree(path):
+    relative = path.relative_to(REPO_ROOT).as_posix()
+    return relative.startswith("machine-configuration/machines/chise/")
+
+
+HARDCODED_NON_LUCAS_HOME_PATTERN = re.compile(r"/home/zanoni(?:/|\b)")
+
+
+CHISE_ONLY_CAPABILITY_ROOTS = ("machine-configuration/media/anime-streaming/",)
+
+
+def _is_acceptable_zanoni_home_reference(path):
+    relative = path.relative_to(REPO_ROOT).as_posix()
+    if _path_is_in_chise_host_tree(path):
+        return True
+    return relative.startswith(CHISE_ONLY_CAPABILITY_ROOTS)
+
+
+@pytest.fixture(scope="module")
+def all_nix_files():
+    return _collect_files_with_extension(".nix")
+
+
+@pytest.fixture(scope="module")
+def all_shell_files():
+    return [
+        path for path in _walk_repo_paths_filtered() if path.suffix in {".sh", ".bash"}
+    ]
+
+
+@pytest.fixture(scope="module")
+def all_python_files():
+    return _collect_files_with_extension(".py")
+
+
+def test_no_hardcoded_zanoni_home_paths_outside_zanoni_user_tree(
+    all_nix_files, all_python_files, all_shell_files
+):
+    offenders = []
+    for path in [*all_nix_files, *all_python_files, *all_shell_files]:
+        if path == THIS_TEST_FILE:
+            continue
+        if _is_acceptable_zanoni_home_reference(path):
+            continue
+        try:
+            content = path.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError):
+            continue
+        for line_number, line in enumerate(content.splitlines(), start=1):
+            if HARDCODED_NON_LUCAS_HOME_PATTERN.search(line):
+                offenders.append(f"{path}:{line_number}: {line.strip()}")
+
+    assert not offenders, (
+        "Hardcoded /home/zanoni/ path found outside chise-owned configuration. "
+        "Use config.home.homeDirectory or $HOME instead.\n" + "\n".join(offenders)
+    )
+
+
+REFERENCED_SCRIPT_PATTERN = re.compile(r"\b(launch-project-agent)\b")
+
+
+def test_no_references_to_removed_launch_project_agent_script():
+    extensions_to_check = {".nix", ".py", ".sh", ".md"}
+    offenders = []
+    for path in _walk_repo_paths_filtered():
+        if path == THIS_TEST_FILE:
+            continue
+        if path.suffix not in extensions_to_check:
+            continue
+        relative = path.relative_to(REPO_ROOT).as_posix()
+        if relative.startswith(".deep-work/"):
+            continue
+        try:
+            content = path.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError):
+            continue
+        for line_number, line in enumerate(content.splitlines(), start=1):
+            if REFERENCED_SCRIPT_PATTERN.search(line):
+                offenders.append(f"{path}:{line_number}: {line.strip()}")
+
+    assert not offenders, (
+        "References to launch-project-agent found. That script was removed "
+        "when persistent project agents became declarative. Update the "
+        "reference to mention the clawde.agents declaration carrying "
+        'type = "project-manager" instead.\n' + "\n".join(offenders)
+    )
+
+
+def test_root_lock_file_is_the_only_flake_lock():
+    lock_files = sorted(
+        path.relative_to(REPO_ROOT).as_posix()
+        for path in _walk_repo_paths_filtered()
+        if path.name == "flake.lock"
+    )
+
+    assert lock_files == ["flake.lock"], (
+        "The root flake.lock is the single dependency lock for every machine. "
+        f"Found: {lock_files}"
+    )
+
+
+PUBLIC_HTTPS_PACKAGE_SOURCE_PREFIXES = (
+    "https://registry.npmjs.org/",
+    "https://github.com/",
+)
+
+
+def test_npm_lockfiles_resolve_only_from_public_https_sources():
+    offenders = []
+    for path in _walk_repo_paths_filtered():
+        if path.name != "package-lock.json":
+            continue
+        lockfile = json.loads(path.read_text())
+        for package_path, package in lockfile.get("packages", {}).items():
+            resolved = package.get("resolved")
+            if resolved and not resolved.startswith(
+                PUBLIC_HTTPS_PACKAGE_SOURCE_PREFIXES
+            ):
+                offenders.append(
+                    f"{path.relative_to(REPO_ROOT)}: {package_path} -> {resolved}"
+                )
+
+    assert not offenders, (
+        "npm lockfiles must resolve from public HTTPS sources. A lock written "
+        "behind a corporate .npmrc records that private registry, so every other "
+        "machine and CI fails to fetch it, and this public repository publishes "
+        "the internal hostname. Regenerate with "
+        "--registry=https://registry.npmjs.org/.\n" + "\n".join(offenders)
+    )

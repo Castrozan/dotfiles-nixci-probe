@@ -1,0 +1,351 @@
+# Testing
+
+## Taxonomy
+
+Test category is the **directory** a test lives in, not its filename. Any module
+anywhere in the repo may carry a `__tests__/` directory, split into `unit/`,
+`integration/`, and `e2e/`; the runner tiers off those directory names.
+
+- `unit/` — fast, mocked, no system state. The `--quick` (default) gate.
+- `integration/` — needs docker, real services, or multi-step subprocess flows.
+- `e2e/` — runs against a live system (runtime checks, live desktop and terminal
+  behavior, perf thresholds).
+
+Agent LLM tests are a separate axis: the `agent-evals` suites under
+`agent-harness/quality/evaluations/suites/`, run through the `dotfiles-evals` wrapper, keep their
+own flags (`--evals`, `--integration`, `--e2e`).
+
+## Discovery
+
+`repository/verification/run.sh` is the canonical entry point. Every script-test tier collects
+through one shared helper, `_discover_test_files` in `repository/verification/runner/discovery.sh`,
+which walks the **whole repo** for `*/__tests__/<tier>/` and prunes `.git`,
+`node_modules`, `private-configuration`, `result*`, `.deep-work`, `.direnv`,
+`.worktrees`, and `__pycache__`. A new module's tests are picked up with zero
+runner edits — there are no hardcoded collection roots.
+
+A tier collects at **any depth** below its tier directory: the path pattern stops
+at `*/__tests__/<tier>/*` and the file name is matched separately, so grouping a
+tier's files into subdirectories keeps them collected.
+`repository/verification/__tests__/unit/test_every_test_file_is_reachable_by_a_tier.py`
+fails whenever a test file in the repo sits where no collector reaches it.
+
+Two discovery policies:
+
+- **platform-scoped** (bats, pytest): excludes the capability roots belonging to
+  the other platform, because script tests can be platform-specific. macOS reads
+  `repository/verification/runner/linux-only-test-roots.txt` and Linux reads
+  `darwin-only-test-roots.txt`; `foreign-platform-test-roots.sh` picks between
+  them so the collectors and the coverage run agree.
+- **cross-platform** (lua, qml): walks both platforms, because those pure-logic
+  suites run identically everywhere.
+
+Nix domain checks (`checks.nix`) are not shell-discovered; the flake aggregates
+them via `repository/verification/nix-checks/default.nix` and they run under `--nix`. Agent
+evals are driven by the `agent-evals` engine, not the shell collectors.
+
+`repository/verification/run.sh --map` prints the whole suite as a tree (module × tier ×
+counts: bats `@test` blocks, pytest functions, lua and qml suites, and a
+`checks.nix: registered` marker per module) so the structure is self-describing.
+
+The nix check inventory in that map is not counted out of the source.
+`repository/verification/map-test-suite.py` evaluates the flake's `checks` attribute
+set for the current system and counts the attribute names it gets back, so the total
+is the set `--nix` would build rather than a guess at how many `checks.nix` files
+declare. When that evaluation cannot run — nix absent, a non-zero exit, a timeout, or
+output it cannot parse — the total prints as `unavailable` with the reason instead of a
+number, because a wrong count reads exactly like a right one.
+
+## Tiers
+
+| Tier                    | Content                                                                                                                                                                                             | Flag                                       |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| Map                     | prints the discovered suite tree, runs nothing                                                                                                                                                      | `--map`                                    |
+| Quick                   | line counts + `unit/` bats + `unit/` pytest + qml + qmllint + lua                                                                                                                                   | `--quick` (default)                        |
+| Nix                     | quick + every flake check attribute, built (`*/__tests__/checks.nix`)                                                                                                                               | `--nix`                                    |
+| Integration (scripts)   | `integration/` bats + `integration/` pytest                                                                                                                                                         | `--integration-scripts` (alias `--docker`) |
+| Runtime / e2e (scripts) | `e2e/` bats + `e2e/` pytest                                                                                                                                                                         | `--runtime`                                |
+| CI                      | line counts + `unit/` bats + `integration/` bats + flake checks + both baseline checks                                                                                                              | `--ci`                                     |
+| Perf                    | desktop + shell benchmarks, both baseline checks with the age gate, `perf-runtime.bats` thresholds                                                                                                  | `--perf`                                   |
+| Agent evals             | `dotfiles-evals run`: every suite under `agent-harness/quality/evaluations/suites/` (`--evals`), or only the `integration_workflows` (`--integration`) or `end_to_end_workflows` (`--e2e`) category | `--evals` / `--integration` / `--e2e`      |
+
+Additional modes: `--all` runs quick + nix + integration-scripts. `--coverage`
+runs the `machine-configuration` `unit/` bats through kcov.
+
+`--ci` is its own tier list, not the quick tier with skips. It drops pytest, qml,
+qmllint and lua, and adds `integration/` bats, the flake checks, and the rebuild and
+desktop baseline checks. Nothing it drops goes unrun: `.github/workflows/tests.yml`
+runs pytest, the qml suites, qmllint (with `QMLLINT_REQUIRED` set, so the lint is
+mandatory there) and lua in a second job.
+
+## Run
+
+```bash
+repository/verification/run.sh                       # quick tier (default)
+repository/verification/run.sh --map                 # print the suite tree (module x tier x counts)
+repository/verification/run.sh --nix                 # quick + nix eval tests
+repository/verification/run.sh --integration-scripts # integration/ bats + pytest (alias: --docker)
+repository/verification/run.sh --runtime             # e2e/ script tests (live system)
+repository/verification/run.sh --all                 # quick + nix + integration-scripts
+repository/verification/run.sh --coverage            # machine-configuration unit/ bats with kcov
+repository/verification/run.sh --ci                  # the tier continuous integration runs
+repository/verification/run.sh --perf                # benchmarks + fresh-baseline gate + thresholds
+```
+
+While editing, run the exact file instead of a tier — the loop is faster and the
+failure stays local to what you changed:
+
+```bash
+bats machine-configuration/operating-system/power-management/__tests__/unit/setup-lid-switch-ignore.bats
+pytest machine-configuration/development/testing/__tests__/unit/test_dotfiles_perf.py
+```
+
+Missing tools do not all fail the same way. Absent bats, nix, kcov or python3 make
+their check print a warning and skip. Absent pytest is a failure whenever python test
+files were collected: the runner refuses to skip silently and hand back a green run
+that inspected nothing. Absent qmllint or quickshell skip too, unless
+`QMLLINT_REQUIRED` is set. Docker is not detected by the runner at all — the
+docker-backed tests skip themselves through
+`repository/verification/helpers/docker-container-assertions.bash`.
+
+### Performance testing
+
+```bash
+dotfiles-perf run               # benchmark all desktop components
+dotfiles-perf run 10 tmux       # benchmark tmux only, 10 iterations
+dotfiles-perf check             # compare the latest run against the baseline
+dotfiles-perf validate          # validate the tracked desktop baseline
+dotfiles-perf test              # pass/fail threshold tests (bats)
+dotfiles-perf all               # full suite: benchmark + check + threshold tests
+dotfiles-perf baseline          # measure and save new baseline
+dotfiles-perf report            # show benchmark history
+dotfiles-perf shell             # shell startup benchmark
+dotfiles-perf rebuild           # nix rebuild benchmark
+```
+
+Validating a baseline and retaking one are different acts, and the runner separates
+them. The baseline check validates the tracked file itself: that it parses as a JSON
+object, that it records `git_commit`, `host` and `config`, that `threshold_percent` is
+a number above zero, and that every measurement carries a value and a ceiling that are
+numbers above zero. That runs everywhere, `--ci` included, because reading a committed
+file needs no hardware and a malformed baseline should turn a push red wherever it is
+noticed.
+
+Baseline age is gated only by `--perf`. It is the one caller that adds
+`--require-fresh`, which is what turns a stale or timestamp-less `generated_at` into a
+failure, and it applies it to both `benchmark-desktop --check-baseline` and
+`benchmark-rebuild --check-baseline`. The gate belongs there because nothing else can
+clear it: clearing it means retaking the measurement, and the nix packaging injects
+`DOTFILES_BENCHMARK_HOST` from the machine the flake builds the command for, so
+`dotfiles-perf baseline` measures the owning host and no other. Continuous integration
+therefore never benchmarks — a shared runner's numbers describe no machine this
+repository configures. The nightly deep tiers run `--perf` on the owning host itself,
+so an expired baseline surfaces in the steward inbox on the one machine that can
+retake it, instead of waiting for someone to type the flag. A host never fails on a
+baseline another host recorded: the age gate applies only where `DOTFILES_BENCHMARK_HOST`
+equals the baseline's recorded `host`.
+
+The nightly runner owns every tier continuous integration cannot reach:
+`--integration-scripts`, `--runtime`, `--perf`, `--integration` and `--e2e`. The last
+two run real agent sessions through `dotfiles-evals`, which no shared runner can.
+
+A tier that cannot run is not a tier that passed. `--evals`, `--integration` and
+`--e2e` return 77, the automake convention for a skipped test, when the tool they
+drive is absent. The nightly runner counts that status as neither a pass nor a
+failure and names the skipped tiers in its verdict, so a machine that quietly lost
+`dotfiles-evals` cannot read as a green night. A night where every
+tier skipped proved nothing and fails.
+
+`benchmark-desktop` is packaged on Linux only, so on darwin the `dotfiles-perf`
+subcommands that delegate to it report the command as unavailable rather than
+producing numbers; `benchmark-rebuild` and `benchmark-shell` are packaged on both.
+
+## What Each Check Proves
+
+These are not interchangeable, and no one of them stands in for another.
+
+- `--ci` proves what a shared Linux runner can prove about a pushed commit: the
+  line-count policy, `unit/` and `integration/` bats, every flake check, and that both
+  tracked baselines are well formed.
+- A named file run directly — `bats <file>`, `pytest <file>` — proves that one file
+  with no tier around it. It is the editing loop, and the only form that keeps a
+  failure local to the thing you touched.
+- `rebuild` proves the Nix modules evaluate and the machine activates. It switches the
+  host to the flake in `~/.dotfiles`, and on darwin aborts when `/run/current-system`
+  did not move, so an activation that died mid-script cannot pass as success. It
+  deploys the main checkout, not a worktree, so what it proves is what is already in
+  `~/.dotfiles`.
+- Live tests prove behavior on a running machine: a real window server, a real daemon,
+  real windows. No automated tier replaces them.
+  `machine-configuration/terminal/__tests__/e2e/README.md` says so directly about its
+  own stress run, which cannot go in CI at any tier.
+- `--perf` measures. A measurement is not a pass/fail claim about a commit; it is a
+  number one machine produced under one load. That is why only the owning host
+  produces it, and why continuous integration deliberately never runs it.
+
+## Test Categories
+
+| Category                 | Location                                                                                                                      | Requires                          |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
+| Unit script tests        | `*/__tests__/unit/*.bats`, `.../unit/test_*.py`                                                                               | bats / pytest                     |
+| Integration script tests | `*/__tests__/integration/*.bats`, `.../integration/test_*.py`                                                                 | bats / pytest, docker or services |
+| E2E script tests         | `*/__tests__/e2e/*.bats`, `.../e2e/test_*.py`                                                                                 | bats / pytest, live system        |
+| Lua / QML suites         | `*/__tests__/*_test.lua`, `*/__tests__/qml/run-qml-tests.sh`                                                                  | lua / quickshell                  |
+| Domain nix tests         | `*/__tests__/checks.nix`                                                                                                      | nix                               |
+| Instruction surface lint | `agent-harness/quality/evaluations/__tests__/unit/instruction-formatting/test_instruction_surfaces_are_structurally_sound.py` | pytest                            |
+| Agent evals              | `agent-harness/quality/evaluations/suites/**/*.yaml`                                                                          | agent-evals cli, model access     |
+
+## Pytest Configuration
+
+The root `pytest.ini` is authoritative for every pytest invocation in the repo,
+including a bare `pytest` at the root:
+
+- `filterwarnings = error`: a warning fails the run. This is not cosmetic; it is
+  what catches leaked file descriptors and sockets, and it is what turns a test
+  that reports its outcome by `return True`/`return False` (which pytest ignores)
+  into a visible failure instead of a silent pass.
+- `--strict-markers`: every `pytest.mark.<name>` must be registered under
+  `markers` here. A module-local `pytest.ini` does not help: when the invocation
+  spans several directories the rootdir resolves to the repo root and the local
+  file is shadowed, so register markers in the root config only.
+- `--strict-config`, `xfail_strict`: an unknown ini key or an unexpectedly
+  passing xfail fails rather than warns.
+- `norecursedirs` mirrors the prune list in `repository/verification/runner/discovery.sh`, so a bare root
+  `pytest` never walks into `private-configuration`.
+- `python_files = test_*.py` matches the collector's own pattern, so a live
+  stress script named `*_test.py` is not collected as a test suite.
+
+## Co-located Domain Tests
+
+Tests live alongside their modules in `<module>/__tests__/`:
+`agent-harness/<capability>` and `machine-configuration/<domain>/<capability>`,
+both treated alike, split into `unit/`,
+`integration/`, and `e2e/` subdirectories. The runner
+discovers them by directory (`*/__tests__/<tier>/*.bats` and `*/__tests__/<tier>/test_*.py`)
+— the subdirectory **is** the tier. There is no filename-suffix routing.
+
+Bats tests load shared helpers from the root `repository/verification/helpers/` via relative path;
+the number of `../` segments is the module's nesting depth (a test in
+`machine-configuration/<domain>/<capability>/__tests__/unit/` is five levels deep, so it loads
+`'../../../../../repository/verification/helpers/bash-script-assertions'`). Pytest tests resolve the
+script under test through a `conftest.py` at the module's `__tests__/` level, which
+applies to all three subdirectories.
+
+## Writing Bin Script Tests
+
+Test filename must match script name: a `scripts/foo` under a capability is covered by `<capability>/__tests__/unit/foo.bats` (or `integration/` / `e2e/` for the heavier tiers).
+
+The shared helper at `repository/verification/helpers/bash-script-assertions.bash` auto-resolves the script path from the test filename, searching the `scripts/` directories under `machine-configuration/` and then under `agent-harness/agent-instructions/skills/`.
+
+### Minimal template
+
+```bash
+#!/usr/bin/env bats
+
+load '../../../../../repository/verification/helpers/bash-script-assertions'
+
+@test "is executable" {
+    assert_is_executable
+}
+
+@test "passes shellcheck" {
+    assert_passes_shellcheck
+}
+```
+
+### Available assertions
+
+**Quality gates** — every script test should include these:
+
+| Assertion                           | Checks                                     |
+| ----------------------------------- | ------------------------------------------ |
+| `assert_is_executable`              | +x permission bit                          |
+| `assert_passes_shellcheck`          | shellcheck passes (skips if not installed) |
+| `assert_uses_strict_error_handling` | `set -euo pipefail` in first 5 lines       |
+
+**Behavioral** — test script execution:
+
+| Assertion                                  | Usage                                               |
+| ------------------------------------------ | --------------------------------------------------- |
+| `run_script_under_test [args...]`          | Run script under test, sets `$status` and `$output` |
+| `assert_fails_with "pattern" [args...]`    | Exits non-zero, output contains pattern             |
+| `assert_succeeds_with "pattern" [args...]` | Exits zero, output contains pattern                 |
+
+**Static analysis** — test script content without executing:
+
+| Assertion                                            | Usage                                                |
+| ---------------------------------------------------- | ---------------------------------------------------- |
+| `assert_script_source_matches "regex"`               | Script source matches regex                          |
+| `assert_script_source_does_not_match "regex"`        | Script source does not match regex                   |
+| `assert_script_source_matches_all "a" "b" "c"`       | Script source matches all regexes                    |
+| `assert_pattern_appears_before "first" "second"`     | First pattern appears before second                  |
+| `assert_installs_apt_packages pkg1 pkg2`             | `apt-get install` lines for each package             |
+| `assert_writes_config_to_path "/path" "val1" "val2"` | Config path and values in source                     |
+| `assert_activates_systemd_service name`              | `activate_service` or `systemctl enable` for service |
+
+### Example: behavioral test
+
+```bash
+#!/usr/bin/env bats
+
+load '../../../../../repository/verification/helpers/bash-script-assertions'
+
+@test "is executable"     { assert_is_executable; }
+@test "passes shellcheck" { assert_passes_shellcheck; }
+
+@test "shows usage with no args" {
+    assert_fails_with "Usage:"
+}
+
+@test "processes valid input" {
+    assert_succeeds_with "Done" --flag value
+}
+```
+
+### Example: setup script (static analysis)
+
+```bash
+#!/usr/bin/env bats
+
+load '../../../../../repository/verification/helpers/bash-script-assertions'
+
+@test "is executable"              { assert_is_executable; }
+@test "passes shellcheck"          { assert_passes_shellcheck; }
+@test "uses strict error handling"  { assert_uses_strict_error_handling; }
+
+@test "installs required packages" {
+    assert_installs_apt_packages foo bar
+}
+
+@test "configures service" {
+    assert_writes_config_to_path "/etc/foo.conf" "KEY=value"
+    assert_activates_systemd_service foo
+}
+```
+
+### When setup/teardown is needed
+
+Override `setup()` and `teardown()` for tests that need temp files or state. The helper assertions still work because they resolve the script path from the test filename, not from a variable.
+
+```bash
+setup() {
+    TEST_DIR=$(mktemp -d)
+    cd "$TEST_DIR" || return 1
+}
+
+teardown() {
+    rm -rf "$TEST_DIR"
+}
+```
+
+## Policies
+
+1. **Every capability script gets a test file.** At minimum: `assert_is_executable` + `assert_passes_shellcheck`.
+2. **Test filename = script name, category = directory.** `<capability>/scripts/foo` → `<capability>/__tests__/unit/foo.bats`. The helper auto-resolves the script path from the filename regardless of which tier directory the test lives in.
+3. **Static over execution for setup scripts.** Scripts requiring sudo/root are tested via content analysis, not execution. Verify configs, packages, and service activation are declared correctly.
+4. **Behavioral tests for CLI scripts.** Scripts that take user input should test error paths (missing args, bad input) and success paths.
+5. **Containerized integration tests go in `integration/`.** Place docker-backed tests under `<domain>/__tests__/integration/`; they run via `--integration-scripts` (alias `--docker`) and stay out of the quick gate by directory, not by filename. Build and drive the container through `repository/verification/helpers/docker-container-assertions.bash`, which builds `repository/verification/Dockerfile` (Ubuntu with nix) and skips the test when no docker daemon is reachable, rather than shelling out to `docker` by hand.
+6. **No external test libraries.** `repository/verification/helpers/bash-script-assertions.bash` covers common assertions. Avoid adding bats-assert/bats-file/bats-mock unless a concrete need arises.
+7. **Shellcheck is mandatory.** All bash scripts must pass shellcheck. The `assert_passes_shellcheck` assertion handles environments where shellcheck isn't installed by skipping.
+8. **Names mean things.** Test directories mirror source directories. File and function names describe what they test, not how. Follow `agent-harness/agent-instructions/core-rules/core.md` naming and script conventions.
+9. **Canonical script pattern.** All shell scripts under `__tests__/` follow the repository's script conventions: `set -Eeuo pipefail`, `readonly` constants, `main()` at bottom, `_` prefixed private functions, no comments. `machine-configuration/development/system-rebuild/scripts/rebuild/rebuild` and `repository/verification/run.sh` are the worked examples.

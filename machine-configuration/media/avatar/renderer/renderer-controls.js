@@ -1,0 +1,172 @@
+const MOUTH_OPENING_AT_PEAK = 0.8;
+const MINIMUM_VOICE_PEAK = 0.08;
+const VOICE_PEAK_DECAY = 0.995;
+const MOUTH_OPENING_RATE = 30;
+const MOUTH_CLOSING_RATE = 12;
+const VOICE_LEVEL_THRESHOLD = 0.02;
+const VOICE_HOLD_MILLISECONDS = 400;
+
+export function followLevel(current, target, deltaSeconds) {
+  const rate = target > current ? MOUTH_OPENING_RATE : MOUTH_CLOSING_RATE;
+  return current + (target - current) * (1 - Math.exp(-rate * deltaSeconds));
+}
+
+export function followVoicePeak(peak, level) {
+  return Math.max(level, peak * VOICE_PEAK_DECAY, MINIMUM_VOICE_PEAK);
+}
+
+export function mouthOpening(level, voicePeak) {
+  return Math.max(0, (level / voicePeak) * MOUTH_OPENING_AT_PEAK);
+}
+
+export function emotionMouthTarget(timestamp, lastVoiceTime) {
+  return timestamp - lastVoiceTime < VOICE_HOLD_MILLISECONDS ? 0 : 1;
+}
+
+export function visibleMode(mode, speaking) {
+  return mode === "camera" && speaking ? "avatar" : mode;
+}
+
+export class RendererControls {
+  constructor(state, actions) {
+    this.state = state;
+    this.actions = actions;
+    this.voicePeak = 0;
+    this.channel = new BroadcastChannel("avatar-local-controls");
+    this.channel.onmessage = this.handleLocal.bind(this);
+    this.handlers = {
+      audioLevel: ({ level }) => {
+        this.voicePeak = followVoicePeak(this.voicePeak, level);
+        state.mouthTarget = mouthOpening(level, this.voicePeak);
+        state.lastLevelTime = performance.now();
+        if (level > VOICE_LEVEL_THRESHOLD)
+          state.lastVoiceTime = state.lastLevelTime;
+        window.avatarStatus.levelMessages++;
+      },
+      updateExpression: actions.setExpression,
+      setIdle: (message) => {
+        state.idleMode = message.mode;
+      },
+      setPresented: ({ presented }) => actions.setPresented(presented),
+      startSpeaking: (message) => {
+        state.speaking = true;
+        actions.beginSpeech(message);
+      },
+      speechEnded: () => {
+        state.speaking = false;
+        actions.endSpeech();
+      },
+      perform: this.requestPerformance.bind(this),
+      setVideoMode: this.requestVideoMode.bind(this),
+      setCharacter: this.requestCharacter.bind(this),
+    };
+  }
+
+  connect() {
+    this.socket = new WebSocket("ws://127.0.0.1:8765");
+    this.socket.onopen = () => {
+      this.socket.send(JSON.stringify({ type: "identify", role: "renderer" }));
+      this.socket.send(
+        JSON.stringify({
+          type: "characterChanged",
+          name: this.actions.currentCharacter(),
+        }),
+      );
+    };
+    this.socket.onmessage = (event) => this.dispatch(JSON.parse(event.data));
+    this.socket.onclose = () => {
+      this.state.mouthTarget = 0;
+      this.state.speaking = false;
+      setTimeout(() => this.connect(), 1500);
+    };
+  }
+
+  dispatch(message) {
+    if (Object.hasOwn(this.handlers, message.type))
+      this.handlers[message.type](message);
+  }
+
+  requestPerformance({ action, name, id }) {
+    try {
+      const result = this.actions.perform(action, name);
+      this.socket.send(
+        JSON.stringify({
+          type: "performanceApplied",
+          action,
+          name,
+          result,
+          id,
+        }),
+      );
+    } catch (error) {
+      this.socket.send(
+        JSON.stringify({
+          type: "performanceError",
+          message: error.message,
+          id,
+        }),
+      );
+    }
+  }
+
+  async requestVideoMode(message) {
+    try {
+      await this.actions.showMode(message.mode);
+      this.socket.send(
+        JSON.stringify({
+          type: "videoModeChanged",
+          mode: this.state.mode,
+          id: message.id,
+        }),
+      );
+    } catch (error) {
+      this.socket.send(
+        JSON.stringify({
+          type: "videoModeError",
+          message: error.message,
+          id: message.id,
+        }),
+      );
+    }
+  }
+
+  async requestCharacter(message) {
+    try {
+      await this.actions.showCharacter(message.name);
+      this.socket.send(
+        JSON.stringify({
+          type: "characterChanged",
+          name: message.name,
+          id: message.id,
+        }),
+      );
+    } catch (error) {
+      this.socket.send(
+        JSON.stringify({
+          type: "characterError",
+          message: error.message,
+          id: message.id,
+        }),
+      );
+    }
+  }
+
+  async handleLocal(event) {
+    try {
+      if (event.data.type === "enableCamera")
+        await this.actions.enableCamera(event.data.deviceId);
+      if (event.data.type === "disableCamera") this.actions.disableCamera();
+      this.channel.postMessage({
+        type: "cameraResult",
+        message: this.actions.cameraActive()
+          ? "Camera enabled"
+          : "Camera released",
+      });
+    } catch (error) {
+      this.channel.postMessage({
+        type: "cameraResult",
+        message: error.message,
+      });
+    }
+  }
+}

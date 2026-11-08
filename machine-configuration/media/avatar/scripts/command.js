@@ -1,0 +1,117 @@
+const WebSocket = require("ws");
+
+const SPEECH_TURN_TIMEOUT_MILLISECONDS = 300000;
+const IDENTIFIED_RESPONSES = [
+  "videoModeChanged",
+  "videoModeError",
+  "performanceApplied",
+  "performanceError",
+  "characterChanged",
+  "characterError",
+];
+
+const builders = {
+  status: () => ({ type: "getStatus" }),
+  mode: (mode) => ({ type: "setVideoMode", mode }),
+  character: (name) => ({ type: "setCharacter", name }),
+  capabilities: () => ({ type: "perform", action: "capabilities" }),
+  expression: (name, intensity = 1) => ({
+    type: "setExpression",
+    name,
+    intensity: Number(intensity),
+  }),
+  gesture: (name) => ({ type: "perform", action: "gesture", name }),
+  pose: (name) => ({ type: "perform", action: "pose", name }),
+  look: (name) => ({ type: "perform", action: "look", name }),
+  idle: (mode) => ({ type: "setIdle", mode }),
+  presence: (presence) => ({
+    type: "setPresented",
+    presented: presence === "shown",
+  }),
+  "stop-speaking": () => ({ type: "stopSpeaking" }),
+  speak: (text, emotion = "neutral", output = "both", voice) => ({
+    type: "speak",
+    text,
+    emotion,
+    output,
+    voice,
+  }),
+};
+
+function parseCommand(arguments_) {
+  const build = Object.hasOwn(builders, arguments_[0])
+    ? builders[arguments_[0]]
+    : null;
+  if (!build)
+    throw new Error(
+      "Usage: avatar-command status | mode avatar|camera|composite | character NAME | expression NAME [INTENSITY] | gesture NAME | pose NAME | look TARGET | capabilities | idle MODE | presence shown|hidden | stop-speaking | speak TEXT [EMOTION] [mic|speakers|both] [VOICE]",
+    );
+  return build(...arguments_.slice(1));
+}
+
+function responseBelongsToCommand(response, command) {
+  return (
+    !IDENTIFIED_RESPONSES.includes(response.type) || response.id === command.id
+  );
+}
+
+function handleResponse(response, context) {
+  if (response.type === "identifyAck") {
+    context.connection.send(JSON.stringify(context.command));
+    return;
+  }
+  if (
+    [
+      "videoModeRequested",
+      "performanceRequested",
+      "characterRequested",
+    ].includes(response.type)
+  )
+    return;
+  if (!responseBelongsToCommand(response, context.command)) return;
+  console.log(JSON.stringify(response));
+  if (
+    ["error", "videoModeError", "performanceError", "characterError"].includes(
+      response.type,
+    )
+  )
+    process.exitCode = 1;
+  clearTimeout(context.timeout);
+  context.connection.close();
+}
+
+function sendCommand(command) {
+  command.id = require("node:crypto").randomUUID();
+  const connection = new WebSocket("ws://127.0.0.1:8765");
+  const timeout = setTimeout(
+    () => {
+      console.error("Avatar command timed out");
+      process.exitCode = 1;
+      connection.terminate();
+    },
+    command.type === "speak" ? SPEECH_TURN_TIMEOUT_MILLISECONDS : 10000,
+  );
+  const context = { connection, command, timeout };
+  connection.on("open", () =>
+    connection.send(JSON.stringify({ type: "identify", role: "agent" })),
+  );
+  connection.on("message", (bytes) =>
+    handleResponse(JSON.parse(bytes.toString()), context),
+  );
+  connection.on("error", (error) => {
+    console.error(error.message);
+    process.exitCode = 1;
+  });
+  connection.on("close", () => clearTimeout(timeout));
+}
+
+if (require.main === module) {
+  try {
+    sendCommand(parseCommand(process.argv.slice(2)));
+  } catch (error) {
+    console.error(error.message);
+    process.exitCode = 1;
+  }
+}
+
+module.exports = { parseCommand };

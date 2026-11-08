@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+hermes_home="${HERMES_HOME:-$HOME/.hermes}"
+
+export HERMES_HOME="$hermes_home"
+export PATH="$HERMES_AGENT_RUNTIME_PATH:$PATH"
+
+mkdir -p "$hermes_home"
+
+if [ -z "${HERMES_AGENT_LAUNCH_SEEDED:-}" ]; then
+	export HERMES_AGENT_LAUNCH_SEEDED=1
+	install -m 0644 "$HERMES_AGENT_CONFIG_TEMPLATE" "$hermes_home/config.yaml"
+	install -m 0644 "$HERMES_AGENT_SOUL" "$hermes_home/SOUL.md"
+fi
+
+exec "$HERMES_AGENT_BINARY" "$@"

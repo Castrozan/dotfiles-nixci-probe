@@ -1,0 +1,135 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import json
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+PREFERENCE_MERGE_DEFERRED_BECAUSE_BROWSER_RUNNING_EXIT_CODE = 3
+
+
+class ExistingPreferencesUnreadableError(Exception):
+    pass
+
+
+def chromium_browser_process_is_running(browser_process_name: str) -> bool:
+    try:
+        result = subprocess.run(
+            ["/usr/bin/pgrep", "-x", browser_process_name],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except FileNotFoundError:
+        return False
+    return result.returncode == 0
+
+
+def deep_merge_overrides_into_existing(existing: dict, overrides: dict) -> dict:
+    for override_key, override_value in overrides.items():
+        if isinstance(override_value, dict) and isinstance(
+            existing.get(override_key), dict
+        ):
+            existing[override_key] = deep_merge_overrides_into_existing(
+                existing[override_key], override_value
+            )
+        else:
+            existing[override_key] = override_value
+    return existing
+
+
+def write_json_atomically(destination_path: Path, content: dict) -> None:
+    destination_directory = destination_path.parent
+    destination_directory.mkdir(parents=True, exist_ok=True)
+    temporary_file = tempfile.NamedTemporaryFile(
+        mode="w",
+        dir=destination_directory,
+        delete=False,
+        suffix=".tmp",
+    )
+    try:
+        json.dump(content, temporary_file, separators=(",", ":"))
+        temporary_file.flush()
+        os.fsync(temporary_file.fileno())
+    finally:
+        temporary_file.close()
+    os.replace(temporary_file.name, destination_path)
+
+
+def load_existing_preferences_or_empty_when_absent(preferences_path: Path) -> dict:
+    if not preferences_path.exists():
+        return {}
+    try:
+        with preferences_path.open() as preferences_file:
+            return json.load(preferences_file)
+    except (json.JSONDecodeError, OSError) as load_error:
+        raise ExistingPreferencesUnreadableError(
+            f"cannot parse existing {preferences_path}: {load_error}"
+        ) from load_error
+
+
+def backup_preferences_once_per_run(preferences_path: Path) -> None:
+    if not preferences_path.exists():
+        return
+    backup_path = preferences_path.with_suffix(preferences_path.suffix + ".pre-merge")
+    if backup_path.exists():
+        return
+    shutil.copy2(preferences_path, backup_path)
+
+
+def main() -> int:
+    if len(sys.argv) not in (4, 5):
+        print(
+            "usage: merge-chromium-profile-preferences <overrides.json> "
+            "<browser_user_data_dir> <browser_process_name> "
+            "[target_file_relative_to_user_data_dir]",
+            file=sys.stderr,
+        )
+        return 2
+
+    overrides_path = Path(sys.argv[1])
+    browser_user_data_directory = Path(sys.argv[2]).expanduser()
+    browser_process_name = sys.argv[3]
+    target_file_relative_to_user_data_directory = (
+        sys.argv[4] if len(sys.argv) == 5 else "Default/Preferences"
+    )
+
+    if chromium_browser_process_is_running(browser_process_name):
+        print(
+            f"INFO: {browser_process_name} is running; "
+            "preference merge deferred until next launch.",
+            file=sys.stderr,
+        )
+        return PREFERENCE_MERGE_DEFERRED_BECAUSE_BROWSER_RUNNING_EXIT_CODE
+
+    if not overrides_path.exists():
+        print(f"ERROR: overrides file missing: {overrides_path}", file=sys.stderr)
+        return 1
+
+    with overrides_path.open() as overrides_file:
+        overrides = json.load(overrides_file)
+
+    target_file_path = (
+        browser_user_data_directory / target_file_relative_to_user_data_directory
+    )
+    backup_preferences_once_per_run(target_file_path)
+    try:
+        existing = load_existing_preferences_or_empty_when_absent(target_file_path)
+    except ExistingPreferencesUnreadableError as unreadable_error:
+        print(
+            f"ERROR: refusing to overwrite {target_file_path} with only the "
+            f"overrides; {unreadable_error}",
+            file=sys.stderr,
+        )
+        return 1
+    merged = deep_merge_overrides_into_existing(existing, overrides)
+    write_json_atomically(target_file_path, merged)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

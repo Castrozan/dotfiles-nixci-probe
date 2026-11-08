@@ -1,0 +1,11 @@
+{
+  "name": "dotfiles-opencli",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@jackwener/opencli": "2.0.0"
+  },
+  "overrides": {
+    "undici": "^7.30.1"
+  }
+}

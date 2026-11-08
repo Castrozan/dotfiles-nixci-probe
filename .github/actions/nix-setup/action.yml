@@ -1,0 +1,65 @@
+name: Nix setup
+description: Install Nix and restore the store cache for one Nix Lint job.
+
+inputs:
+  cache-key:
+    description: >-
+      Job-scoped segment of the cache key. Only flake-check restores and saves a store archive;
+      other jobs use their configured Nix substituters.
+    required: true
+  github-token:
+    description: >-
+      Token used when fetching flake inputs, so GitHub API rate limits do not fail a run.
+    required: true
+  private-input-key:
+    description: Read-only deploy key for the private arr-stack flake input.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/nix-build-space
+      if: ${{ inputs.cache-key == 'flake-check' }}
+
+    - name: Configure private arr-stack input access
+      if: ${{ inputs.private-input-key != '' }}
+      shell: bash
+      env:
+        ARR_STACK_DEPLOY_KEY: ${{ inputs.private-input-key }}
+      run: |
+        umask 077
+        mkdir -p "$RUNNER_TEMP/arr-stack-ssh"
+        printf '%s\n' "$ARR_STACK_DEPLOY_KEY" > "$RUNNER_TEMP/arr-stack-ssh/key"
+        printf '%s\n' 'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl' > "$RUNNER_TEMP/arr-stack-ssh/known_hosts"
+        printf 'GIT_SSH_COMMAND=ssh -i "%s" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="%s"\n' "$RUNNER_TEMP/arr-stack-ssh/key" "$RUNNER_TEMP/arr-stack-ssh/known_hosts" >> "$GITHUB_ENV"
+
+    - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24
+      with:
+        extra_nix_config: |
+          experimental-features = nix-command flakes
+          access-tokens = github.com=${{ inputs.github-token }}
+
+    - name: Configure the signed Devenv cache
+      shell: bash
+      run: |
+        cache_configuration=machine-configuration/development/development-environments/devenv-cache.json
+        mkdir -p "$HOME/.config/nix"
+        printf 'extra-substituters = %s\nextra-trusted-public-keys = %s\n' \
+          "$(jq -er .cacheUrl "$cache_configuration")" \
+          "$(jq -er .publicKey "$cache_configuration")" >> "$HOME/.config/nix/nix.conf"
+
+    # Keeping the cache configuration in one place matters more than the indirection costs: a key
+    # that drifts between jobs turns every restore into a silent miss, which reads as a slow run
+    # rather than as a broken cache.
+    - uses: nix-community/cache-nix-action@v7
+      if: ${{ inputs.cache-key == 'flake-check' }}
+      with:
+        primary-key: nix-native-${{ runner.os }}-${{ inputs.cache-key }}-${{ hashFiles('flake.lock', 'agent-harness/harnesses/codex/package/unwrapped.nix', 'repository/nix-library/fetch-prebuilt-binary.nix', 'machine-configuration/development/local-language-models/**') }}
+        restore-prefixes-first-match: |
+          nix-native-${{ runner.os }}-${{ inputs.cache-key }}-
+          nix-${{ runner.os }}-${{ inputs.cache-key }}-
+        paths: |
+          ~/.cache/nix
+        gc-max-store-size-linux: 4G
+        purge: false

@@ -1,0 +1,150 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+readonly DOTFILES_DIRECTORY="${HOME}/.dotfiles"
+readonly MACHINE_ALIAS="@machineAlias@"
+readonly BACKENDS_DIRECTORY="@backendsDirectory@"
+readonly EXCLUSIVE_RUN_LOCK_HELPER="@exclusiveRunLockHelper@"
+readonly EXCLUSIVE_RUN_SCOPE_PYTHON="@exclusiveRunScopePython@"
+readonly NIXOS_REBUILD_PREFETCH="@nixosRebuildPrefetch@"
+readonly NIXOS_STAGED_REBUILD="@nixosStagedRebuild@"
+readonly REBUILD_MEMORY_REPORTER="@memoryReporter@"
+readonly REBUILD_MEMORY_SYSTEM="@memorySystem@"
+export NIXOS_REBUILD_PREFETCH NIXOS_STAGED_REBUILD
+export EXCLUSIVE_RUN_SCOPE_PYTHON
+export REBUILD_MEMORY_SYSTEM
+readonly TYPICAL_REBUILD_DURATION_SECONDS=420
+readonly NIX_DAEMON_PROFILE="/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh"
+
+REBUILD_SWITCH_LOG_PATH=""
+REBUILD_MEASURE_MEMORY=0
+REBUILD_FORWARD_ARGUMENTS=()
+REBUILD_MEMORY_ACTION="switch"
+
+LOW_PRIORITY_COMMAND_PREFIX=(nice -n 19)
+if command -v ionice >/dev/null 2>&1; then
+	LOW_PRIORITY_COMMAND_PREFIX+=(ionice -c 3)
+fi
+
+fail() {
+	echo "error: $*" >&2
+	exit 1
+}
+
+parse_memory_measurement_arguments() {
+	for argument in "$@"; do
+		case "$argument" in
+		--measure-memory) REBUILD_MEASURE_MEMORY=1 ;;
+		*) REBUILD_FORWARD_ARGUMENTS+=("$argument") ;;
+		esac
+	done
+	export REBUILD_MEASURE_MEMORY
+}
+
+prepare_rebuild_memory_metrics() {
+	REBUILD_MEMORY_DIRECTORY="$(mktemp -d -t dotfiles-rebuild-memory.XXXXXXXX)"
+	REBUILD_MEMORY_RECORDS="${REBUILD_MEMORY_DIRECTORY}/records.jsonl"
+	REBUILD_MEMORY_STARTED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+	export REBUILD_MEMORY_RECORDS
+	trap 'finish_rebuild_memory_metrics "$?"' EXIT
+}
+
+finish_rebuild_memory_metrics() {
+	local rebuild_status="$1"
+	local metrics_directory="${XDG_STATE_HOME:-${HOME}/.local/state}/dotfiles/rebuild-memory"
+	"$REBUILD_MEMORY_REPORTER" publish "$REBUILD_MEMORY_RECORDS" "$metrics_directory" \
+		"$REBUILD_MEMORY_ACTION" "$MACHINE_ALIAS" "$REBUILD_MEMORY_STARTED_AT" "$rebuild_status" ||
+		echo "error: could not persist rebuild memory metrics" >&2
+	rm -rf -- "$REBUILD_MEMORY_DIRECTORY"
+	exit "$rebuild_status"
+}
+
+detect_backend_name() {
+	if [ "$(uname -s)" = "Darwin" ]; then
+		echo "darwin"
+	elif [ -e /etc/NIXOS ]; then
+		echo "nixos"
+	else
+		echo "home-manager"
+	fi
+}
+
+source_backend_for_this_platform() {
+	local backend_path
+	backend_path="${BACKENDS_DIRECTORY}/$(detect_backend_name)"
+	[ -f "$backend_path" ] || fail "no rebuild backend at ${backend_path}"
+	# shellcheck disable=SC1090
+	. "$backend_path"
+}
+
+ensure_dotfiles_directory_exists() {
+	[ -d "$DOTFILES_DIRECTORY" ] || fail "dotfiles directory not found at ${DOTFILES_DIRECTORY}"
+}
+
+ensure_nix_is_on_the_path() {
+	command -v nix >/dev/null 2>&1 && return 0
+	[ -f "$NIX_DAEMON_PROFILE" ] || fail "nix is not on PATH and ${NIX_DAEMON_PROFILE} does not exist"
+	# shellcheck disable=SC1090
+	. "$NIX_DAEMON_PROFILE"
+}
+
+prepare_exclusive_rebuild_lock() {
+	[ -f "$EXCLUSIVE_RUN_LOCK_HELPER" ] || fail "exclusive rebuild lock helper not found at ${EXCLUSIVE_RUN_LOCK_HELPER}"
+	[ -f "${EXCLUSIVE_RUN_LOCK_HELPER%/*}/exclusive_run_scope.py" ] || fail "exclusive rebuild lock scope is missing"
+	[ -f "${EXCLUSIVE_RUN_LOCK_HELPER%/*}/exclusive_run_lock.py" ] || fail "exclusive rebuild lock driver is missing"
+	# shellcheck disable=SC1090
+	. "$EXCLUSIVE_RUN_LOCK_HELPER"
+	capture_exclusive_run_owner || fail "cannot identify rebuild owner"
+	[ "$(detect_backend_name)" = "home-manager" ] || return 0
+	acquire_exclusive_run_lock_or_emit_retry_instructions \
+		"rebuild" "$TYPICAL_REBUILD_DURATION_SECONDS" "$REBUILD_SWITCH_LOG_PATH"
+}
+
+initialize_git_submodules() {
+	[ -f "${DOTFILES_DIRECTORY}/.gitmodules" ] || return 0
+	git -C "$DOTFILES_DIRECTORY" submodule update --init --recursive 2>/dev/null || true
+}
+
+nudge_clawde_agents_to_redeploy_on_continued_sessions() {
+	command -v clawde-redeploy >/dev/null 2>&1 || return 0
+	clawde-redeploy || true
+}
+
+main() {
+	parse_memory_measurement_arguments "$@"
+	set -- "${REBUILD_FORWARD_ARGUMENTS[@]}"
+	local rebuild_action="switch"
+	if [ "${1:-}" = "boot" ]; then
+		[ "$(detect_backend_name)" = "nixos" ] || fail "rebuild boot is supported only on NixOS"
+		rebuild_action="boot"
+		shift
+	fi
+	REBUILD_MEMORY_ACTION="$rebuild_action"
+
+	ensure_dotfiles_directory_exists
+	ensure_nix_is_on_the_path
+	source_backend_for_this_platform
+
+	backend_prepare_environment
+	prepare_exclusive_rebuild_lock
+	prepare_rebuild_memory_metrics
+	initialize_git_submodules
+
+	if [ "$rebuild_action" = "boot" ]; then
+		backend_boot "$@"
+		echo ":: Boot generation staged on ${MACHINE_ALIAS}; reboot to activate."
+		return 0
+	fi
+
+	backend_switch "$@"
+	backend_verify_switch_landed
+	backend_after_switch || echo ":: Post-switch desktop refresh did not complete." >&2
+	nudge_clawde_agents_to_redeploy_on_continued_sessions
+
+	echo ":: Rebuild complete on ${MACHINE_ALIAS}."
+}
+
+if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
+	main "$@"
+fi

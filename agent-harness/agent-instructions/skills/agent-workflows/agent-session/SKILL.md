@@ -1,0 +1,36 @@
+---
+name: agent-session
+description: Restart, compact, or exit the current Claude Code, Codex, or OpenCode session from inside it. Use to apply a configuration change, resume work without waiting for input, compact context, or end a finished session.
+---
+
+### How it finds its target
+
+Run `agent-session` in the foreground through the agent's own shell tool. The command accepts no target and Herdr
+resolves only the enclosing pane from `HERDR_PANE_ID`, so an agent can control itself but not another session.
+
+### Restart
+
+Run `agent-session restart` to make newly built configuration live or to carry on without waiting for input. Commit
+pending changes first, because restart creates a new process and only durable on-disk state survives it. Herdr resumes
+the exact recorded session in the same pane and submits the continuation prompt after the replacement agent is idle. It
+refuses before shutdown when it has no exact resume record. Expect no reply from the old process: the turn resumes after
+restart with the continuation prompt.
+
+### Compact
+
+Run `agent-session compact` when asked to compact your own session. Persist the state you must recover first, because
+only the compaction summary survives. The harness rejects or merely queues its compact command during a turn, so the
+command returns at once and submits compaction after the turn ends: finish the reply and stop, since compaction cannot
+start while the turn keeps working. Clawde-managed sessions may compact, because the process survives.
+
+### Restart refuses what it cannot preserve
+
+Restart and exit fail outside Herdr and refuse to bypass a Clawde wrapper, which owns supervised-agent lifecycle. Never
+work around either boundary with manual signals or a harness's most-recent-session command.
+
+### Exit
+
+Run `agent-session exit` only once every task is finished, changes are committed where that applies, and you have
+summarized what you accomplished, because that summary is the last thing the human reads. It asks Herdr to stop the
+agent and remove its enclosing pane. `agent-session exit --print-target` reports
+the enclosing Herdr pane without stopping it.

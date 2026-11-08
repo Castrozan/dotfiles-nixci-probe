@@ -1,0 +1,89 @@
+let
+  chise_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDXjYtc1kccaHnEeCnLfn5jB+3K8ULqIIsFoq+4pc+fX";
+  rin_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICpNZt8hGVbToPSE0nqVFXsGSM3Zae2tAH/lmVN5rD1x";
+  kira_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJw+IAmg/Vwv7U3BKyKl5fE+VidKx3ZPp8fkWJTy4jNG";
+  all_keys = [
+    chise_key
+    rin_key
+    kira_key
+  ];
+in
+{
+  "bot-tokens/telegram/telegram-bot-token.age".publicKeys = all_keys;
+  "bot-tokens/telegram/telegram-bot-token-jarvis.age".publicKeys = all_keys;
+  "bot-tokens/telegram/telegram-bot-token-clever.age".publicKeys = all_keys;
+  "bot-tokens/telegram/telegram-bot-token-golden.age".publicKeys = all_keys;
+  "bot-tokens/telegram/telegram-bot-token-robson.age".publicKeys = all_keys;
+  "bot-tokens/telegram/telegram-bot-token-jenny.age".publicKeys = all_keys;
+  "bot-tokens/telegram/telegram-bot-token-monster.age".publicKeys = all_keys;
+  "bot-tokens/telegram/telegram-bot-token-silver.age".publicKeys = all_keys;
+  "bot-tokens/discord/discord-bot-token-jarvis.age".publicKeys = all_keys;
+  "bot-tokens/discord/discord-bot-token-clever.age".publicKeys = all_keys;
+  "bot-tokens/discord/discord-bot-token-golden.age".publicKeys = all_keys;
+  "bot-tokens/discord/discord-bot-token-robson.age".publicKeys = all_keys;
+  "bot-tokens/discord/discord-bot-token-jenny.age".publicKeys = all_keys;
+  "bot-tokens/discord/discord-bot-token-monster.age".publicKeys = all_keys;
+  "bot-tokens/discord/discord-bot-token-silver.age".publicKeys = all_keys;
+  "bot-tokens/discord/discord-bot-token-claude.age".publicKeys = all_keys;
+
+  "discord-channels/discord-channels-monster.age".publicKeys = all_keys;
+
+  "api-keys/brave-api-key.age".publicKeys = all_keys;
+  "api-keys/deepgram-api-key.age".publicKeys = all_keys;
+  "api-keys/elevenlabs-api-key.age".publicKeys = all_keys;
+  "api-keys/gemini-api-key.age".publicKeys = all_keys;
+  "api-keys/klipy-api-key.age".publicKeys = all_keys;
+  "api-keys/nvidia-api-key.age".publicKeys = all_keys;
+  "api-keys/opencode-api-key.age".publicKeys = all_keys;
+  "api-keys/openai-api-key.age".publicKeys = all_keys;
+  "api-keys/tavily-api-key.age".publicKeys = all_keys;
+  "api-keys/grid-token-robson.age".publicKeys = all_keys;
+  "api-keys/grid-token-clever.age".publicKeys = all_keys;
+  "api-keys/todoist-api-token.age".publicKeys = all_keys;
+
+  "credentials/jira-api-token.age".publicKeys = all_keys;
+  "credentials/glab-token.age".publicKeys = all_keys;
+  "credentials/gitlab-com-token.age".publicKeys = all_keys;
+  "credentials/github-com-token.age".publicKeys = all_keys;
+  "credentials/x/x-username.age".publicKeys = all_keys;
+  "credentials/x/x-email.age".publicKeys = all_keys;
+  "credentials/x/x-password.age".publicKeys = all_keys;
+  "credentials/x/x-cookies.age".publicKeys = all_keys;
+  "credentials/obsidian/obsidian-headless-auth-token.age".publicKeys = all_keys;
+  "credentials/obsidian/obsidian-headless-sync-config.age".publicKeys = all_keys;
+  "credentials/viu-auth.age".publicKeys = all_keys;
+  "credentials/home-assistant-token.age".publicKeys = all_keys;
+  "infrastructure/home-router-admin-credentials.age".publicKeys = all_keys;
+  "infrastructure/tailscale-chise-share-link.age".publicKeys = all_keys;
+  "credentials/media/samaritano-tracker.age".publicKeys = all_keys;
+  "credentials/google-totp-secret.age".publicKeys = all_keys;
+  "credentials/usage-reporting/gcp-usage-uploader-key.age".publicKeys = all_keys;
+  "credentials/usage-reporting/ingest-producer-secret.age".publicKeys = all_keys;
+  "credentials/bitwarden/bitwarden-client-id.age".publicKeys = all_keys;
+  "credentials/bitwarden/bitwarden-client-secret.age".publicKeys = all_keys;
+  "credentials/bitwarden/bitwarden-master-password.age".publicKeys = all_keys;
+  "credentials/media/jellyseerr-smtp-app-password.age".publicKeys = all_keys;
+  "credentials/media/arr-qbittorrent-password.age".publicKeys = all_keys;
+  "credentials/media/arr-readmeabook-password.age".publicKeys = all_keys;
+  "credentials/media/arr-audiobookshelf-password.age".publicKeys = all_keys;
+  "credentials/media/arr-radarr-password.age".publicKeys = all_keys;
+  "credentials/media/arr-sonarr-password.age".publicKeys = all_keys;
+  "credentials/media/arr-prowlarr-password.age".publicKeys = all_keys;
+  "credentials/media/arr-bazarr-password.age".publicKeys = all_keys;
+  "credentials/media/arr-samaritano-indexer-apikey.age".publicKeys = all_keys;
+  "credentials/media/jellyfin-admin-api-key.age".publicKeys = all_keys;
+  "credentials/media/torbox-api-key.age".publicKeys = all_keys;
+  "credentials/media/suwayomi-extension-repositories.age".publicKeys = all_keys;
+  "credentials/proton-vpn/proton-openvpn-credentials.age".publicKeys = all_keys;
+  "credentials/proton-vpn/proton-paraguay-openvpn-config.age".publicKeys = all_keys;
+
+  "infrastructure/id_ed25519_phone.age".publicKeys = all_keys;
+  "infrastructure/grid-hosts.age".publicKeys = all_keys;
+  "infrastructure/ssh-hosts.age".publicKeys = all_keys;
+  "infrastructure/gpg-private-key.age".publicKeys = all_keys;
+  "infrastructure/wifi-psk-zanoni.age".publicKeys = all_keys;
+  "infrastructure/telegram-ids.age".publicKeys = all_keys;
+  "infrastructure/jarvis-session-connector-credentials.age".publicKeys = all_keys;
+  "infrastructure/kira-session-connector-credentials.age".publicKeys = all_keys;
+  "infrastructure/rin-session-connector-credentials.age".publicKeys = all_keys;
+}

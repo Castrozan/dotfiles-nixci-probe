@@ -1,0 +1,181 @@
+import json
+import os
+import re
+import shutil
+import stat
+import subprocess
+import sys
+from pathlib import Path
+
+CURRENT_THEME_PATH = Path.home() / ".config" / "hypr-theme" / "current" / "theme"
+NEXT_THEME_PATH = Path.home() / ".config" / "hypr-theme" / "current" / "next-theme"
+USER_THEMES_PATH = Path.home() / ".config" / "hypr-theme" / "user-themes"
+THEME_NAME_FILE = Path.home() / ".config" / "hypr-theme" / "current" / "theme.name"
+BTOP_CONF = Path.home() / ".config" / "btop" / "btop.conf"
+VSCODE_USER_SETTINGS = Path.home() / ".config" / "Code" / "User" / "settings.json"
+
+
+def normalize_theme_name(raw_name: str) -> str:
+    cleaned = re.sub(r"<[^>]+>", "", raw_name)
+    return cleaned.lower().replace(" ", "-")
+
+
+def find_theme_directory(theme_name: str) -> Path | None:
+    candidate = USER_THEMES_PATH / theme_name
+    if candidate.exists():
+        return candidate
+    return None
+
+
+def make_directory_tree_writable(directory: Path) -> None:
+    for root, dirs, files in os.walk(directory):
+        root_path = Path(root)
+        root_path.chmod(root_path.stat().st_mode | stat.S_IWUSR)
+        for name in files:
+            filepath = root_path / name
+            if filepath.is_symlink():
+                continue
+            filepath.chmod(filepath.stat().st_mode | stat.S_IWUSR)
+
+
+def copy_theme_to_next_theme_directory(theme_directory: Path) -> None:
+    force_remove_directory_tree(NEXT_THEME_PATH)
+    shutil.copytree(theme_directory, NEXT_THEME_PATH, symlinks=True)
+    make_directory_tree_writable(NEXT_THEME_PATH)
+
+
+def force_remove_directory_tree(directory: Path) -> None:
+    if directory.exists():
+        make_directory_tree_writable(directory)
+        shutil.rmtree(directory)
+
+
+def rotate_current_theme_with_next() -> None:
+    old_theme_path = CURRENT_THEME_PATH.parent / "old-theme"
+    force_remove_directory_tree(old_theme_path)
+
+    if CURRENT_THEME_PATH.exists():
+        CURRENT_THEME_PATH.rename(old_theme_path)
+
+    NEXT_THEME_PATH.rename(CURRENT_THEME_PATH)
+
+    force_remove_directory_tree(old_theme_path)
+
+
+def set_background_symlink_from_current_theme() -> None:
+    backgrounds_directory = CURRENT_THEME_PATH / "backgrounds"
+    if not backgrounds_directory.is_dir():
+        return
+    backgrounds = sorted(
+        entry
+        for entry in backgrounds_directory.iterdir()
+        if entry.is_file() or entry.is_symlink()
+    )
+    if not backgrounds:
+        return
+    background_link = CURRENT_THEME_PATH.parent / "background"
+    background_link.unlink(missing_ok=True)
+    background_link.symlink_to(backgrounds[0])
+
+
+def touch_quickshell_bar_theme_colors_if_present() -> None:
+    quickshell_bar_colors = CURRENT_THEME_PATH / "quickshell-bar-colors.json"
+    if quickshell_bar_colors.is_file():
+        quickshell_bar_colors.touch()
+
+
+def find_catppuccin_plugin_run_shell_path() -> str | None:
+    tmux_config = Path.home() / ".config" / "tmux" / "tmux.conf"
+    if not tmux_config.is_file():
+        return None
+    for line in tmux_config.read_text().splitlines():
+        stripped = line.strip()
+        if "catppuccin" in stripped and stripped.startswith("run-shell "):
+            return stripped.removeprefix("run-shell ").strip()
+    return None
+
+
+def reload_tmux_theme_if_running() -> None:
+    tmux_theme_file = CURRENT_THEME_PATH / "tmux-theme.conf"
+    if not tmux_theme_file.is_file():
+        return
+    catppuccin_plugin_path = find_catppuccin_plugin_run_shell_path()
+    if catppuccin_plugin_path is None:
+        return
+    subprocess.run(
+        ["tmux", "run-shell", catppuccin_plugin_path],
+        capture_output=True,
+    )
+
+
+def update_clipse_custom_theme() -> None:
+    generated_clipse_theme = CURRENT_THEME_PATH / "clipse.json"
+    clipse_custom_theme = Path.home() / ".config" / "clipse" / "custom_theme.json"
+    if generated_clipse_theme.is_file():
+        shutil.copy2(generated_clipse_theme, clipse_custom_theme)
+
+
+def update_vscode_color_customizations() -> None:
+    generated_vscode_colors = CURRENT_THEME_PATH / "vscode-colors.json"
+    if not generated_vscode_colors.is_file() or not VSCODE_USER_SETTINGS.is_file():
+        return
+
+    color_overrides = json.loads(generated_vscode_colors.read_text())
+    vscode_settings = json.loads(VSCODE_USER_SETTINGS.read_text())
+    vscode_settings["workbench.colorCustomizations"] = color_overrides
+    VSCODE_USER_SETTINGS.write_text(json.dumps(vscode_settings, indent=2) + "\n")
+
+
+def update_btop_theme_in_config() -> None:
+    btop_theme = CURRENT_THEME_PATH / "btop.theme"
+    if not BTOP_CONF.is_file() or not btop_theme.is_file():
+        return
+
+    content = BTOP_CONF.read_text()
+    content = re.sub(
+        r"^color_theme = .*$",
+        f'color_theme = "{btop_theme}"',
+        content,
+        flags=re.MULTILINE,
+    )
+    content = re.sub(
+        r"^theme_background = .*$",
+        "theme_background = False",
+        content,
+        flags=re.MULTILINE,
+    )
+    BTOP_CONF.write_text(content)
+
+
+def main() -> None:
+    if len(sys.argv) < 2:
+        print("Usage: hypr-theme-set <theme-name>", file=sys.stderr)
+        raise SystemExit(1)
+
+    theme_name = normalize_theme_name(sys.argv[1])
+    theme_directory = find_theme_directory(theme_name)
+
+    if theme_directory is None:
+        print(f"Theme '{theme_name}' does not exist", file=sys.stderr)
+        raise SystemExit(1)
+
+    copy_theme_to_next_theme_directory(theme_directory)
+    subprocess.run(["hypr-theme-set-templates"])
+    rotate_current_theme_with_next()
+    THEME_NAME_FILE.write_text(theme_name + "\n")
+    touch_quickshell_bar_theme_colors_if_present()
+    set_background_symlink_from_current_theme()
+    subprocess.run(["hypr-theme-bg-apply"])
+    subprocess.run(["hypr-restart-hyprctl"])
+    subprocess.run(["makoctl", "reload"], capture_output=True)
+    update_btop_theme_in_config()
+    subprocess.run(["hypr-theme-set-herdr"])
+    update_clipse_custom_theme()
+    update_vscode_color_customizations()
+    subprocess.run(["hypr-theme-set-gnome"])
+    reload_tmux_theme_if_running()
+    subprocess.run(["notify-send", "Theme changed", theme_name, "-t", "2000"])
+
+
+if __name__ == "__main__":
+    main()

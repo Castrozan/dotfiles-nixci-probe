@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Usage: tmux-pane-toggle <pane_title> <command_to_run> [working_directory] [window_id] [previous_pane_id] [previous_pane_was_zoomed]
+# Toggles a named pane in the current tmux window. First press splits and
+# runs <command_to_run> in a maximised pane titled <pane_title>. Second
+# press hides it. When the command exits, the pane is destroyed and focus
+# returns to the previous pane (re-zoomed if it was zoomed before).
+
+[ "${DEBUG:-}" = "1" ] && set -x
+set -eu
+
+if [ "$#" -lt 2 ]; then
+	echo "usage: tmux-pane-toggle <pane_title> <command_to_run> [working_directory] [window_id] [previous_pane_id] [previous_pane_was_zoomed]" >&2
+	exit 2
+fi
+
+pane_title="$1"
+command_to_run="$2"
+working_directory="${3:-$(tmux display-message -p '#{pane_current_path}')}"
+current_window_id="${4:-$(tmux display-message -p '#{window_id}')}"
+previous_pane_id="${5:-$(tmux display-message -p '#{pane_id}')}"
+previous_pane_was_zoomed="${6:-$(tmux display-message -p '#{window_zoomed_flag}')}"
+
+existing_pane_id=$(
+	tmux list-panes -t "$current_window_id" -F '#{pane_id} #{pane_title}' 2>/dev/null |
+		{ grep -E "^%[0-9]+ ${pane_title}$" || true; } |
+		cut -d' ' -f1 |
+		head -n1
+)
+
+if [ -n "$existing_pane_id" ]; then
+	tmux select-pane -t "$existing_pane_id" \; resize-pane -Z -t "$existing_pane_id"
+	exit 0
+fi
+
+if ! new_pane_id=$(tmux split-window -v -c "$working_directory" -P -F '#{pane_id}' 2>&1); then
+	tmux display-message -d 3000 "Error: Failed to create pane: $new_pane_id"
+	exit 1
+fi
+
+launch_command="tmux-wait-pane-resize; $command_to_run; tmux run-shell -b 'tmux-restore-pane-after-toggle $new_pane_id $previous_pane_id $previous_pane_was_zoomed'"
+
+tmux select-pane -t "$new_pane_id" -T "$pane_title" \; resize-pane -Z -t "$new_pane_id" \; send-keys -t "$new_pane_id" "$launch_command" Enter

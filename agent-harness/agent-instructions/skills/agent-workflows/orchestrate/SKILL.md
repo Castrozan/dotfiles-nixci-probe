@@ -1,0 +1,183 @@
+---
+name: orchestrate
+description: Delegate same-goal work to another interactive agent, harness, or machine over a2a, herdr, or ssh. Use to spawn parallel peers, dispatch, observe, correct, and repeat.
+---
+
+### Core delegation authority
+
+Core [delegation](../../../core-rules/core.md#delegation) owns what the driving agent retains and core
+[completion](../../../core-rules/core.md#completion) owns final verification. This skill owns the bounded
+peer-transport, dispatch, observation, correction, and settling procedure.
+
+### Orientation
+
+A peer is an interactive agent session sitting in a pane, whatever harness runs it and whatever machine it runs on. It
+shares none of your context, holds one task at a time, and answers through scraped terminal text, so orchestration is a
+loop of small dispatches and inspections rather than a handoff.
+
+This skill owns peer placement, transport, and that loop; general workspace, tab, and pane mechanics belong to `herdr`,
+decomposing a large goal belongs to `deliver`, and writing a long autonomous brief belongs to `goal-prompt`. Drive a
+peer when the work needs another machine, another harness, a session that outlives you, or a session already holding the
+context; use your own subagents for read-only breadth instead.
+
+### Placing a local peer
+
+When delegating part of the current goal on this machine, launch the peer in the orchestrator's existing tab with `herdr
+agent start <name> --cwd <dir> --tab "$HERDR_TAB_ID" --no-focus [--split right|down] -- "$SHELL" -lic 'exec "$@"'
+herdr-agent-login-shell <harness> <arguments>`. The login-interactive shell restores the user's normal shell environment
+before replacing itself with the harness; a direct argv launch inherits the Herdr server's service PATH and silently
+drops user commands.
+
+Pin `--tab` and pass `--no-focus`: an unpinned start splits the focused tab, which may be one the human switched to,
+while `--workspace` alone does not pin a tab. A single same-goal helper splits your tab; sub-sessions you orchestrate
+get the workspace [decisions](references/decisions.md) describes, and unrelated work goes to a new tab through `herdr`.
+
+Before launching concurrent code-editing peers, load `coding` and give each peer its own worktree; sharing a checkout
+lets one peer commit another's changes.
+
+### Reaching a peer on this machine
+
+One daemon per machine watches the multiplexer and treats every pane running an agent as a peer, declared or ad hoc, so
+the reachable set changes as sessions open and close. `a2a list` is that live directory. `a2a ask` submits a task and
+blocks until the peer answers. `a2a send` returns a task id to follow with `a2a status`. `a2a cancel` interrupts the
+turn without killing the session.
+
+herdr drives the same pane directly and shows what the task view flattens: reported status, full scrollback, a
+permission prompt, or the keyboard itself. Dispatch with a2a, observe and rescue with herdr. A harness-native session
+channel reaches only peers your own harness manages, so prefer a2a whenever the peer is a different harness or a
+different session tree.
+
+### Reaching a peer on another machine
+
+The daemon listens on loopback only, so a remote peer is the same `a2a` command run on the far host over ssh, addressed
+by its ssh alias. Quote the task once for your shell and once for the remote one; an unquoted task arrives as separate
+arguments and is rejected. Never bind or forward that port onto a shared network: it is unauthenticated and would hand
+anyone a keyboard into every live agent session on that machine. Nothing local travels with the task, so name work the
+remote peer can actually reach, a path in a repository it has or a ref you pushed, never a scratch path that exists only
+here.
+
+### Peer names drift
+
+A peer's address is its tab label, else its working directory's basename, else its pane id, and it silently gains a
+pane-id suffix the moment a second pane claims the same name. A cached name can therefore later reach a different
+session or none. Re-resolve from `a2a list` immediately before every dispatch rather than reusing a name from earlier in
+the task. Renaming the agent in herdr does not change that address; rename the tab when you want a stable one for a
+session you spawned.
+
+### Addressing a peer by Servant
+
+Every `a2a` target also accepts a peer's Servant name, in any case, or its harness session id; `a2a list` shows both
+beside the peer name. A Servant belongs to the conversation rather than the tab, so a tab rename leaves it intact.
+
+Two live peers can draw the same Servant, and the command then refuses and names every candidate; choose one by peer
+name or pane id. Clawde agents carry no Servant, so address them by peer name.
+
+### The drive loop
+
+Run this loop per goal, one turn at a time: 1) fix the goal and the evidence that would settle it before dispatching; 2)
+resolve the peer from the live directory, spawning one through herdr when none fits, and confirm it is idle; 3) dispatch
+one self-contained task naming the goal, the constraints, where to work, and what to report; 4) watch the turn to its
+end instead of assuming the first answer is final;
+
+5\) inspect the artifact the turn produced, never the peer's account of it; 6) answer whatever the peer asks, and
+correct with one instruction naming the specific gap; 7) repeat from step 3 with the next increment, and re-route the
+work when two corrections have not moved it;
+
+8\) close out by telling the peer the goal is met, closing every local peer pane you launched under `herdr`'s owned-pane
+cleanup rule, and removing only what is yours, such as a worktree or a scratch file. Give the peer the smallest
+increment that produces inspectable evidence, because a turn you cannot check is a turn you cannot correct.
+
+### Dispatch discipline
+
+The peer discussed nothing with you, so restate the goal, the constraint, the acceptance test, and every path in each
+task; a dispatch referring to what you decided earlier reaches an agent with no memory of it. Keep the task itself to
+one line and put depth in a file the peer reads, because newline handling differs per harness and a half-submitted
+prompt looks exactly like a task in progress. A peer holds one active task: a second dispatch is refused and names the
+task already running, so wait or cancel rather than resending, and never split one goal into parallel tasks against the
+same peer.
+
+### Completion is inferred not reported
+
+A task completes when the multiplexer reports the peer working and then stopping. A peer with no reported status
+completes after roughly half a minute without a new output line, so a long silent turn there hands you a partial answer
+while the peer still works. Treat any answer as a signal, then confirm against reported status or a fresh read before
+acting on it. When you need a deterministic end, tell the peer to finish its turn with a delimiter line you can
+match on.
+
+### Answers are scraped not returned
+
+The answer is pane text filtered to that harness's own marker lines, so continuation lines, lists, and tables are
+dropped and a multi-line reply arrives as its first line only. Ask for anything longer than a sentence as a file, a
+commit, or a diff and read that yourself; read the pane through herdr when you need what the task view discarded.
+
+### Decisions travel as cards
+
+When you orchestrate sub-sessions, read [decisions](references/decisions.md) first: it owns their workspace, the brief
+and round templates, the event loop, deciding as Lucas from his user model, and the loop that learns from his
+corrections. A pane question or a scraped answer arrives without the context a decision card carries.
+
+### A2a sender identity
+
+The client labels every message dispatched through a2a with the sender's current Servant name, or its harness session
+name when no Servant is assigned. Identity passed over ssh must come from the sending session; the remote machine cannot
+infer it.
+
+### When a peer stalls
+
+Blocked means it is waiting on a decision, a permission prompt or a question, so answer that prompt rather than
+dispatching again, which the peer refuses while its task is still active. A pane whose agent exited fails the task as a
+vanished target, so check liveness before retrying into a dead session. Take the keyboard through herdr when correction
+has stopped working, and never leave a stalled peer unattended, because a peer blocked on a prompt burns the goal's time
+without reporting anything.
+
+### Durable fleet continuity
+
+Use `a2a fleet status` for cached host and exact pane/conversation evidence without network calls or routine updates.
+The standalone `dot-fleet` client accepts the same arguments without the `a2a fleet` prefix. State lives in
+`${XDG_STATE_HOME:-~/.local/state}/dot-fleet/registry.sqlite3`; `--db PATH` selects isolated state. Register only
+reviewed host mappings with `confirm-host HOST --transport SSH_ALIAS --evidence REF`, using `local` for the confirmed
+collector.
+
+Run `status --refresh HOST OTHER_HOST` only when current evidence is needed: at most four confirmed hosts, two metadata
+commands each, five seconds per command, thirty-second network budget, bounded output and no retries. `ingest HOST FILE`
+accepts a timestamped object. It contains `observed_at`, `evidence`, exact `a2a list --json` under `a2a`, and complete
+`herdr api snapshot` under `herdr`. Imports remain cached and cannot alone authorize dispatch.
+
+### Fleet identity and readiness
+
+Read `view`, `last_seen`, `fresh`, `present`, host `observation` and blockers together. Unreachable preserves cached
+agent evidence; failed observation does not imply failed work. Idle and service health do not establish composer
+readiness, mailbox consumption or model productivity. A rotated conversation retains history but not prior ownership.
+Assign only an observed tuple with `assign HOST PANE_ID SESSION_ID --owner dot --task TASK_REF`.
+
+Check installed command help before creating sessions: Herdr 0.9.1 uses `agent start NAME --kind codex --pane OWNED_PANE
+--timeout 30000` instead of the placement syntax above. Resume only an exact Herdr-reported ID through the existing
+owned-session workflow. `agent-session restart` is self-targeted and refuses supervised ownership; do not inspect
+private session stores or use the most-recent conversation fallback.
+
+### Fleet receipts and results
+
+For an authorized self-contained target-accessible brief, use `dispatch HOST PANE SESSION --owner dot --task TASK_REF
+--request-id ID --prompt 'Read /target/brief and implement it.' --execute` on one shell line. The durable intent is
+reserved before one A2A send; `[dot-fleet:ID]` travels in the prompt. An identical repeated ID never resends. One
+unresolved task holds each pane; limit coordinator fan-out to two. Use owned targets and avoid concurrent lifecycle
+changes because A2A has no atomic expected-conversation-ID send precondition.
+
+Use `result ID` for one bounded read. A receipt or exact ACK is not completion. `reported_completed` is heuristic;
+inspect the artifact, tests and session before `verify ID --evidence CHECKED_RESULT_REF`. A lost receipt or remote task
+record remains uncertain, not permission to retry. Recover a receipt with `reconcile ID --remote-task-id RECOVERED_ID
+--evidence RECEIPT_REF`, or record a checked outcome with `reconcile ID --outcome completed --evidence RESULT_REF`.
+Outcomes `failed` and `not_submitted` require independent proof; silence cannot prove non-submission.
+
+### Fleet event integration
+
+Feed existing Herdr lifecycle/status events to `dot-fleet event HOST FILE --evidence SOURCE_REF`. This persists
+invalidation without storing event data, inferring conversation identity, starting a subscription or refreshing itself.
+Collect a full snapshot after invalidation or reconnect. Keep on-demand refresh until an existing orchestrator consumes
+events; alternatively attach metadata collection to the existing fifteen-minute maintenance. Do not add duplicate
+timers, nightly tests, paid inference for polling or routine notifications.
+
+No service or session lifecycle is activated by this client. Never clear drafts, send extra Enter or switch transport to
+bypass a refusal. Preserve exact target, blocker and pending/denied/uncertain outcome, then reconcile before another
+intent. The repository runbook `agent-harness/agent-to-agent-communication/client/FLEET.md` documents formats and the
+separate deployment proposal. Local synthetic tests do not establish live fleet readiness or deployed behavior.

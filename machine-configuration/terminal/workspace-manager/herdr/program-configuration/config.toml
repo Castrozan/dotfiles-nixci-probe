@@ -1,0 +1,168 @@
+[theme]
+name = "terminal"
+
+[terminal]
+default_shell = "/run/current-system/sw/bin/bash"
+shell_mode = "login"
+new_cwd = "follow"
+
+[ui]
+mouse_capture = true
+annotation_command = "prefix+n"
+accent = "@herdr_accent@"
+sidebar_start_collapsed = true
+navigator_collapse_workspaces = true
+confirm_close = false
+prompt_new_tab_name = false
+
+[ui.sound]
+enabled = false
+
+[keys]
+prefix = "ctrl+b"
+reload_config = "prefix+a"
+detach = "prefix+d"
+settings = "prefix+w"
+new_tab = "prefix+c"
+rename_tab = "prefix+r"
+close_tab = "prefix+&"
+previous_tab = ["prefix+pageup", "ctrl+pageup"]
+next_tab = ["prefix+pagedown", "ctrl+pagedown"]
+move_tab_previous = "ctrl+shift+pageup"
+move_tab_next = "ctrl+shift+pagedown"
+switch_tab = "prefix+1..9"
+new_workspace = "prefix+shift+n"
+rename_workspace = "prefix+shift+w"
+close_workspace = "prefix+shift+d"
+workspace_picker = "prefix+g"
+goto = ["prefix+s", "prefix+ctrl+s"]
+switch_workspace = "prefix+shift+1..9"
+close_pane = "prefix+x"
+zoom = "prefix+z"
+resize_mode = "prefix+shift+r"
+focus_pane_left = "prefix+left"
+focus_pane_down = "prefix+down"
+focus_pane_up = "prefix+up"
+focus_pane_right = "prefix+right"
+cycle_pane_next = ["prefix+o", "prefix+ctrl+o"]
+cycle_pane_previous = "prefix+shift+o"
+split_vertical = "prefix+%"
+split_horizontal = 'prefix+"'
+copy_mode = "prefix+["
+edit_scrollback = ""
+toggle_sidebar = "prefix+shift+b"
+
+[[keys.command]]
+key = "prefix+y"
+type = "plugin_action"
+command = "angel-o.agent-resume.insert-resume"
+description = "insert the latest agent resume command"
+
+[[keys.command]]
+key = "prefix+ctrl+y"
+type = "plugin_action"
+command = "angel-o.agent-resume.insert-resume"
+description = "insert the latest agent resume command"
+
+[[keys.command]]
+key = "prefix+i"
+type = "pane"
+command = "lazygit"
+
+[[keys.command]]
+key = "prefix+shift+i"
+type = "pane"
+command = "review-changes"
+description = "review an MR, PR or branch in lazygit"
+
+[[keys.command]]
+key = "prefix+f"
+type = "plugin_action"
+command = "castrozan.pace.read"
+description = "open Herdr Pace"
+
+[[keys.command]]
+key = "prefix+ctrl+f"
+type = "plugin_action"
+command = "castrozan.pace.read"
+description = "open Herdr Pace"
+
+[[keys.command]]
+key = "prefix+b"
+type = "pane"
+command = "btop"
+
+[[keys.command]]
+key = "prefix+n"
+type = "plugin_action"
+command = "annotate.capture"
+description = "annotate selected text"
+
+[[keys.command]]
+key = "prefix+shift+a"
+type = "plugin_action"
+command = "annotate.copy-context"
+description = "copy annotations as context"
+
+[[keys.command]]
+key = "prefix+ctrl+a"
+type = "plugin_action"
+command = "annotate.copy-archive"
+description = "copy and archive annotations"
+
+[[keys.command]]
+key = "prefix+m"
+type = "plugin_action"
+command = "annotate.manage"
+description = "manage annotations"
+
+[[keys.command]]
+key = "prefix+u"
+type = "plugin_action"
+command = "annotate.open"
+description = "review documents in this folder"
+
+[[keys.command]]
+key = "prefix+shift+u"
+type = "plugin_action"
+command = "annotate.last"
+description = "review the agent's last reply"
+
+[[keys.command]]
+key = "prefix+e"
+type = "pane"
+command = "code . -n"
+
+[[keys.command]]
+key = "prefix+v"
+type = "pane"
+command = "nvim ."
+
+[[keys.command]]
+key = "prefix+t"
+type = "pane"
+command = "bash -c 'claude-show-session | LESS=\"-R +G\" less'"
+
+[[keys.command]]
+key = "prefix+ctrl+c"
+type = "shell"
+command = "$HERDR_BIN_PATH pane move $HERDR_ACTIVE_PANE_ID --new-tab --no-focus"
+
+[[keys.command]]
+key = "prefix+shift+c"
+type = "shell"
+command = "$HERDR_BIN_PATH pane move $HERDR_ACTIVE_PANE_ID --new-workspace"
+
+[[keys.command]]
+key = "ctrl+g"
+type = "shell"
+command = "$HERDR_BIN_PATH pane send-keys $HERDR_ACTIVE_PANE_ID ctrl+b"
+
+# nvim keeps ctrl+page while it owns the focused pane; every other pane switches
+# tabs on it. prefix+pageup and prefix+pagedown switch tabs from inside nvim too.
+[[keys.passthrough]]
+key = ["ctrl+pageup", "ctrl+pagedown"]
+processes = ["nvim"]
+
+[experimental]
+allow_nested = true

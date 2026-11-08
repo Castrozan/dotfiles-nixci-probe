@@ -1,0 +1,113 @@
+const { routeAgentCommand } = require("../agent-commands/agent-command-router");
+const {
+  sendResponse,
+  sendError,
+} = require("../messaging/client-response-sender");
+
+const SERVER_VERSION = "1.0.0";
+
+function acknowledgeIdentification(connection, role) {
+  sendResponse(connection, {
+    type: "identifyAck",
+    role,
+    status: "connected",
+    serverVersion: SERVER_VERSION,
+  });
+}
+
+function sendInitialStateToRenderer(connection, context) {
+  const { avatarState, speechFloor } = context;
+  sendResponse(connection, {
+    type: "initialState",
+    state: speechFloor.currentPhase(),
+    expression: avatarState.currentExpression,
+    idleMode: avatarState.currentIdleMode,
+    intensity: avatarState.intensity,
+  });
+}
+
+function handleIdentification(role, connection, context) {
+  const { clientRegistry } = context;
+
+  if (role === "agent") {
+    clientRegistry.registerAgent(connection);
+    acknowledgeIdentification(connection, "agent");
+    return;
+  }
+
+  if (role === "renderer") {
+    clientRegistry.registerRenderer(connection);
+    acknowledgeIdentification(connection, "renderer");
+    sendInitialStateToRenderer(connection, context);
+    return;
+  }
+
+  sendError(connection, `Unknown role: ${role}`);
+  connection.close();
+}
+
+function handleRendererEvent(event, context) {
+  console.log("📥 Renderer event:", event.type);
+  if (
+    [
+      "videoModeChanged",
+      "videoModeError",
+      "performanceApplied",
+      "performanceError",
+      "characterChanged",
+      "characterError",
+    ].includes(event.type)
+  ) {
+    context.clientRegistry.sendToAgents(event);
+  }
+  if (event.type === "characterChanged") {
+    context.textToSpeechGenerator.selectCharacter(event.name);
+  }
+  if (event.type === "speechEnd") {
+    console.log("🔄 Speech ended");
+  }
+}
+
+async function routeClientMessage(rawMessage, connection, context) {
+  try {
+    const message = JSON.parse(rawMessage);
+    const { clientRegistry } = context;
+
+    if (message.type === "identify") {
+      handleIdentification(message.role, connection, context);
+      return;
+    }
+
+    if (clientRegistry.isAgent(connection)) {
+      await routeAgentCommand(rawMessage, connection, context);
+      return;
+    }
+
+    if (clientRegistry.isRenderer(connection)) {
+      handleRendererEvent(message, context);
+      return;
+    }
+
+    sendResponse(connection, {
+      type: "identifyRequest",
+      message:
+        'Please identify with { type: "identify", role: "agent"|"renderer" }',
+    });
+  } catch (error) {
+    console.error("❌ Error processing message:", error.message);
+    sendError(connection, `Message processing error: ${error.message}`);
+  }
+}
+
+function attachClientConnection(connection, context) {
+  console.log("🔌 New WebSocket connection");
+  connection.onMessage((rawMessage) =>
+    routeClientMessage(rawMessage, connection, context),
+  );
+  connection.onClosed(() => context.clientRegistry.forget(connection));
+  connection.onError((error) =>
+    console.error("❌ WebSocket error:", error.message),
+  );
+}
+
+module.exports = { attachClientConnection, routeClientMessage };

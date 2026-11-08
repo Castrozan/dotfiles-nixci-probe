@@ -1,0 +1,192 @@
+---
+description: Agent behavior instructions specific to the .dotfiles repository
+alwaysApply: true
+---
+
+### Orientation
+
+This repository is the declarative source of truth for every configured machine. Nix modules produce all packages,
+services, host and user settings, dotfiles, secrets, packaged scripts and agent instructions; rebuilds materialize them.
+
+Hand changes on the running machine are drift that rebuilds erase. Find and edit the module that owns the change.
+
+Before guessing where something lives, load the `nix` skill: it carries this repo's map - module layout, host split,
+secrets, script packaging, the "where does this belong" call.
+
+### Repo local skills
+
+`nix` and `agent-harness` describe this repo and deploy only into its ignored project skill directories. Claude and
+OpenCode discover them here. Codex discovers only home skills, so read
+`agent-harness/agent-instructions/skills/services/nix/SKILL.md` and
+`agent-harness/agent-instructions/skills/agent-workflows/agent-harness/SKILL.md` directly. Optional knowledge chapters
+live at `references/knowledge.md` beneath each skill.
+
+### Stewardship
+
+This repo is continuously kept synced, green, and pushed by an autonomous per-machine steward agent, declared in the
+clawde-agents module and built from the clawde flake input where its behavior lives. You still push your own commits,
+but push only what fast-forwards. Leave a diverged history, a rebase, or a submodule gitlink conflict to the steward.
+Reconciling them by hand races its live loop, so do it only when explicitly told to act in the steward's place.
+
+A checkout that is ahead of, behind, or diverged from origin/main is normal in-flight state the steward will reconcile;
+never surface it as a task pending on the human. Treat CI failures on `main` during active WIP as expected. Check
+ongoing work and its context before escalating; do not alert or initiate unsolicited repairs solely because `main` is
+red while that work is in progress. Existing validation requirements for changes you own still apply.
+
+### Configuration
+
+Every configuration change lives in this repo and applies declaratively through its capabilities - nix modules,
+home-manager, agenix, overlays, packaged scripts - never by mutating a machine by hand outside the repo. Fold new config
+into the existing module structure rather than adding one-off files. Make it work on every system type this repo targets
+(NixOS and darwin) when the feature allows, guarding platform-specific pieces behind `isNixOS`/`isDarwin`. The same
+holds across the harnesses this repo drives: reach Claude Code, Codex and OpenCode together, then Pi and Hermes where
+each one supports the capability.
+
+Clear state left behind by removed configuration with a one-off command or script on each affected machine, then verify
+it is gone. Never commit cleanup code that runs once and then stays as dead code. This cleanup is the one exception to
+never mutating a machine by hand.
+
+### Nvim keymaps
+
+Before suggesting, adding, or restoring any Neovim keybind, read and follow
+`machine-configuration/editors/neovim/KEYMAPS_POLICY.md`: native Vim built-ins first, LazyVim conventions second, custom
+maps only as a documented last resort, never shadowing a native key. Keep that file current whenever a binding is added
+or removed on purpose; bindings it lists as removed stay removed unless the owner names one explicitly.
+
+### Codex managed settings ownership
+
+Shared MCP servers belong to `agent-harness/agent-instructions/production-plugin/mcp-servers.nix` and travel in the
+complete plugin. Agent-only Claude servers remain in `agent-harness/harnesses/claude-code/mcps/default.nix`; private
+Codex servers remain in `agent-harness/harnesses/codex/config.nix`.
+
+Codex deploys an authoritative nix-source for managed settings, including `mcp_servers`, then seeds a mutable live
+config. The live model and entries in projects, marketplaces, and plugins survive rebuilds. The declarative source wins
+every other key collision, so an MCP dropped from its nix source disappears from the live config on the next rebuild.
+
+### Machine local wrapper
+
+On chise only, the live system is not built straight from this repo. A machine-local entrypoint flake at
+`~/zanoni-system` (outside this tree) imports the public chise config from here and layers a private overlay on top.
+`rebuild` builds that entrypoint, not this repo directly. So a service, unit, secret, or option that is live on chise
+but absent from this repo is most likely owned by that overlay, not missing: check `~/zanoni-system` before declaring it
+undeclared or re-adding it here.
+
+That entrypoint is its own standalone private git repo with its own origin, no CI and no peer stewards. It is not this
+repo and not a submodule of it. The chise steward keeps it reconciled with its origin fast-forward-only, so commit a
+wrapper change into that repo rather than assuming a rebuild alone captures it.
+
+Keep `~/zanoni-system` limited to private OpenClaw integration and secrets. Generic host, provider, and harness
+configuration belongs in this repo; do not make public configuration depend on the private wrapper. Chise-specific;
+other hosts build directly from this repo.
+
+### Scripts
+
+Python 3.12 is the default language for scripts. Use bash only when the script is a thin wrapper gluing shell-native
+tools (tmux send-keys, fzf, sysctl pipelines) where Python would just be subprocess.run calls. Python scripts run via
+Nix - no uv, no venv, no pip. Only scripts under 10 lines of actual logic may live inline in `.nix` files via
+`pkgs.writeShellScript`, `pkgs.writeText`, or similar builders. Anything longer goes to a dedicated file under the
+module's `scripts/` directory and is referenced by path. Long inline scripts are unreadable, unformattable, untestable,
+and escape from nix string interpolation rules destroys quoting. When in doubt, extract.
+
+### Performance
+
+Treat responsiveness, memory, CPU, process count, and network activity as behavior in this repository's clients,
+daemons, and terminal interfaces: measure the changed path, set a bound, avoid unbounded render or polling work, and
+prefer incremental updates over whole-state recomputation.
+
+### Testing
+
+Use the smallest checks that verify the change; a formatting-only edit needs none. Build or evaluate Nix only via
+`rebuild`; CI covers what it skips. Require CI only for affected integrations or platforms local checks cannot verify.
+
+Reach for `repository/verification/run.sh` only to reproduce a job CI turned red, or to iterate on a test you are
+writing. The same goes for a whole pytest tier directory (`*/__tests__/unit`, `*/__tests__/integration`), bare `pytest`,
+`pytest agents` and `pytest .`: run the specific test file needed to verify the change.
+
+Test every Neovim change live in a new Herdr pane; automated and headless checks do not replace this manual test.
+
+### Change review scope
+
+Before pushing a substantive change, load the `review` skill and follow its dotfiles-change procedure over the exact
+commits you added; when the harness cannot load skills, read
+`agent-harness/agent-instructions/skills/development/review/SKILL.md` and its `references/dotfiles-change.md` chapter
+instead. Commit first: this checkout is shared, so a review of the working tree reads whatever peers left uncommitted,
+and a confirmed finding belongs in a follow-up commit rather than an amend a peer may already have built on.
+
+A change is substantive when a wrong edit would survive formatting and still change machine or agent behavior, a build,
+a deployment, or a dependency. The same holds for a wrong edit to an interface, a test, security, a secret, what this
+public repository exposes, or an operational instruction. A change is also substantive when correctness depends on
+several files changing together.
+
+Skip the review only when every hunk is demonstrably non-semantic. That means a formatting or prose correction that
+alters no command, path, identifier, factual claim, policy or behavior. Review the whole change when substantive and
+non-substantive hunks are mixed or the classification stays uncertain. Changed line and file counts never decide this,
+and skipping review does not waive verification required by [testing](#testing).
+
+### Workflows
+
+Treat a workflow's model calls as delegation that consumes the task's agent budget, and keep every dotfiles workflow at
+a fixed call ceiling with no per-item model calls outside the breadth exception of the `agent-harness` workflows
+reference. Author further dotfiles workflows as `dotfiles-*` under `agent-harness/harnesses/claude-code/workflows/`,
+deployed to `~/.claude/workflows/`, rather than ad-hoc subagent fan-out. Give each one a matching `dotfiles-*` command
+in `agent-harness/workflow-commands/`, because that command is how every harness other than Claude Code reaches the
+workflow at all.
+
+### Workflow
+
+After editing files in the dotfiles repo, execute this sequence before responding: 1) format edited files; 2) stage each
+file with git add specific-file, never -A; 3) commit; 4) review the commits you just added when they are substantive
+(see [change review scope](#change-review-scope)); 5) run the local verification required by [testing](#testing);
+
+6\) push; 7) when [testing](#testing) requires CI, continue with independent work while CI runs. Check the verdict only
+when other work is exhausted and a response to the user is due. Load the forge and CI watcher skills, resolve the
+effective upstream and find runs for the full commit SHA. Start a background watcher for every relevant run and accept
+only terminal success as green. A just-pushed commit can have no run for a few seconds, so retry an empty list rather
+than reading it as a verdict;
+
+8\) if required verification fails: fix and repeat the affected steps; 9) respond once the required checks pass. Every
+CI job reports all of its failures rather than dying on the first, so read the whole run and fix the batch in one pass
+instead of pushing once per error.
+
+### Worktrees
+
+This checkout keeps many sibling worktrees live at once. Search them before declaring an expected edit missing, because
+an edit you cannot find here is usually sitting in another checkout rather than lost.
+
+### Applying clawde agent changes
+
+A clawde agent's runtime config - heartbeat gate, interval, prompt, launch command, active hours, rotation - lives in a
+per-agent file the wrapper re-reads on every restart, so a rebuild's warm redeploy applies config changes in place, no
+respawn needed.
+
+The exception is a change to the agent-wrapper code itself. The running wrapper keeps executing the code it launched
+with, so wrapper-code changes stay dormant until the window is fully respawned. A respawn is a reboot, or killing the
+window so the supervisor recreates it from the new spec. Never assume rebuilt wrapper code is live on the running agents
+\- check the live process and respawn if it still runs the old code.
+
+Every other fleet trap that leaves no trace in the source - resume identity, supervisor reconciliation, channel gating,
+the steward loop, the shared server cgroup - is in `agent-harness/harnesses/clawde/knowledge.md`; read it before
+touching any agent, supervisor or heartbeat behavior.
+
+### Agent instructions
+
+Required CI runs `agent-evals check --gravado` on `agent-harness/quality/evaluations/baseline.json` without model
+credentials, enforcing quality floors and per-case regression; stale or missing evidence stays explicitly unmeasured.
+`dotfiles-evals` is `agent-evals` with this repository's config.
+
+Use `dotfiles-evals check` for the strict verdict, which also fails on instructions changed after measurement and on
+expired evidence. Passing `check --gravado` does not prove current model behavior.
+
+Do not proactively run `dotfiles-evals baseline --rodar` after instruction edits: the full model suite is slow and
+routing evals flake, so re-recording can commit transient failures. Measure through an existing authorized model route
+only for an explicitly requested measurement, a diagnosed quality regression or a deliberate instruction improvement;
+ordinary CI does not require one.
+
+### Herdr server restart
+
+herdr runs as one shared server, the `default` session, hosting the whole clawde fleet, the steward, and the interactive
+session at once. Rebuild must preserve attached clients and running pane processes; installing a new package does not
+mean the running server has changed. Activating a server update requires the user's explicit approval, current or prior:
+live handoff preserves pane processes but disconnects clients, while a full `herdr server stop` and relaunch restarts
+every session and drops the whole fleet. Keep server activation separate from ordinary rebuilds. When a full restart is
+approved, stop the server detached after a short delay so the final report flushes before this session drops.

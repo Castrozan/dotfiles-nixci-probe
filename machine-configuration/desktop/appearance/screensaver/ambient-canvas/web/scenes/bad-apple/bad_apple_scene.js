@@ -1,0 +1,80 @@
+(function registerBadAppleScene() {
+  const VIDEO_DIRECTORY_URL = "ambient-canvas-videos";
+  const DEFAULT_CHARACTER_ROWS = 64;
+  const DEFAULT_LUMINANCE_THRESHOLD = 0.45;
+  const DEFAULT_GLYPH_COLOR = "#c8e6ff";
+  const DEFAULT_GLYPH_FONT_FAMILY = "Menlo, monospace";
+  const BACKGROUND_FILL_STYLE = window.AmbientCanvasPalette.backgroundHex;
+
+  function resolveAppearance(options) {
+    return {
+      characterRows: resolveAppearanceOption(
+        options,
+        "characterRows",
+        DEFAULT_CHARACTER_ROWS,
+      ),
+      luminanceThreshold: resolveAppearanceOption(
+        options,
+        "luminanceThreshold",
+        DEFAULT_LUMINANCE_THRESHOLD,
+      ),
+      glyphColor: resolveAppearanceOption(
+        options,
+        "glyphColor",
+        DEFAULT_GLYPH_COLOR,
+      ),
+      glyphFontFamily: resolveAppearanceOption(
+        options,
+        "glyphFontFamily",
+        DEFAULT_GLYPH_FONT_FAMILY,
+      ),
+      backgroundFillStyle: BACKGROUND_FILL_STYLE,
+    };
+  }
+
+  function resolveAppearanceOption(options, optionName, defaultValue) {
+    return options?.[optionName] || defaultValue;
+  }
+
+  function createBadAppleRenderer(canvasElement, options) {
+    const renderBrailleFrame =
+      window.AmbientCanvasBrailleFrameRenderer.createBrailleFrameRenderer(
+        canvasElement,
+        resolveAppearance(options),
+      );
+    const videoSource =
+      window.AmbientCanvasSeekableVideoSource.createSeekableVideoSource(
+        VIDEO_DIRECTORY_URL + "/" + options.videoId + ".mp4",
+        options?.startSeconds || 0,
+        Boolean(options?.deterministicPlayback),
+      );
+
+    return {
+      ready: videoSource.ready,
+      resolveRecordingSource() {
+        return {
+          sequence: "bad-apple:" + options.videoId,
+          durationSeconds: videoSource.resolvePlayableDurationSeconds(),
+        };
+      },
+      prepareFrame(localElapsedSeconds) {
+        return videoSource.prepareFrame(localElapsedSeconds);
+      },
+      render() {
+        renderBrailleFrame(
+          videoSource.element,
+          videoSource.element.videoWidth,
+          videoSource.element.videoHeight,
+        );
+      },
+      resize() {},
+      dispose() {
+        videoSource.dispose();
+      },
+    };
+  }
+
+  window.AMBIENT_CANVAS_SCENE_FACTORIES =
+    window.AMBIENT_CANVAS_SCENE_FACTORIES || {};
+  window.AMBIENT_CANVAS_SCENE_FACTORIES["bad-apple"] = createBadAppleRenderer;
+})();

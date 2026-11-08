@@ -1,0 +1,99 @@
+{ lib, ... }:
+let
+  privateConfigRoot = ../../../private-configuration;
+  chisePrivateConfigExists = builtins.pathExists privateConfigRoot;
+in
+{
+  imports = [
+    ./home/git.nix
+    ./home/hyprland.nix
+    ./home/session-vars.nix
+    ./home/chrome-default-browser.nix
+    ../../../agent-harness/harnesses/clawde/agents/steward.nix
+    ../../../agent-harness/harnesses/clawde/agents/ril-watcher
+
+    ../shared-home-manager-core.nix
+
+    ../../../agent-harness/agent-instructions/agent-instructions-home-manager.nix
+    ../../security/security-home-manager.nix
+    ../../audio/audio-home-manager.nix
+    ../../../agent-harness/harnesses/claude-code
+    ../../../agent-harness/harnesses/clawde
+    ../../../agent-harness/harnesses/codex
+    ../../desktop/desktop-environments/gnome/gnome-home-manager.nix
+    ../../home-automation/home-assistant/home-assistant-home-manager.nix
+    ../../desktop/desktop-environments/hyprland/hyprland-nixos.nix
+    ../../../agent-harness/harnesses/opencode
+    ../../../agent-harness/harnesses/pi
+    ../../../agent-harness/harnesses/hermes
+    ../../../agent-harness/harnesses/hermes/gateway.nix
+    ../../development/testing/testing-home-manager.nix
+    ../../development/local-language-models/llama-cpp-home-manager.nix
+
+    ../../terminal/shell/bash/bash-home-manager.nix
+    ../../terminal/emulators/kitty/kitty-home-manager.nix
+    ../../terminal/multiplexer/tmux/tmux-home-manager.nix
+    ../../terminal/workspace-manager/herdr/herdr-home-manager.nix
+    ../../terminal/emulators/wezterm/wezterm-home-manager.nix
+    ../../terminal/terminal-command-packages-home-manager.nix
+    ../../terminal/visual-effects/cmatrix/cmatrix-home-manager.nix
+
+    ../../editors/cursor/cursor-home-manager.nix
+    ../../editors/neovim/neovim-home-manager.nix
+    ../../editors/visual-studio-code/visual-studio-code-home-manager.nix
+    ../../editors/editor-command-packages-home-manager.nix
+
+    ../../browsers/chrome/chrome-global-linux-home-manager.nix
+
+    ../../desktop/clipboard-history/clipse-home-manager.nix
+    ../../desktop/appearance/fonts/fonts-home-manager.nix
+    ../../desktop/appearance/screensaver/screensaver-home-manager.nix
+    ../../desktop/applications/launcher/fuzzel-home-manager.nix
+    ../../desktop/screen-capture/screen-capture-command-packages-home-manager.nix
+
+    ../../development/cost-monitoring/ccost-home-manager.nix
+    ../../development/cost-monitoring/ccusage-home-manager.nix
+    ../../development/development-environments/devenv-home-manager.nix
+    ../../development/source-code-search/sourcebot/sourcebot-home-manager.nix
+    ../../development/version-control/lazygit-home-manager.nix
+    ../../development/version-control/glab-home-manager.nix
+    ../../development/model-context-protocol/mcporter-home-manager.nix
+    ../../development/version-control/git-fzf-home-manager.nix
+
+    ../../media/anime-streaming/ani-cli-home-manager.nix
+    ../../media/media-streaming/stremio-home-manager.nix
+    ../../terminal/visual-effects/bad-apple/bad-apple-chise-home-manager.nix
+    ../../media/media-command-packages-home-manager.nix
+    ../../media/media-generation/media-generation-home-manager.nix
+    ../../media/avatar/avatar-home-manager.nix
+
+    ../../operating-system/package-management/system-command-packages-home-manager.nix
+    ../../operating-system/resource-monitoring/btop-home-manager.nix
+    ../../operating-system/storage-maintenance/nix-store/stale-symlink-cleanup-home-manager.nix
+
+    ../../devices/mice/corsair-mouse/corsair-mouse-home-manager.nix
+
+    ../../network/ssh/ssh-private-home-manager.nix
+
+    ../../voice/hex-home-manager.nix
+    ../../voice/voxtype-home-manager.nix
+    ../../voice/whisp-away-home-manager.nix
+
+    ../../terminal/visual-effects/cbonsai/cbonsai-chise-home-manager.nix
+    ../../gaming/horizon/horizon-home-manager.nix
+    ../../gaming/install-nothing/install-nothing-home-manager.nix
+    ../../gaming/minecraft/minecraft-home-manager.nix
+    ../../gaming/vesktop/vesktop-home-manager.nix
+
+    ../../operating-system/bluetooth/bluetui-home-manager.nix
+    ../../operating-system/service-management/systemd-manager-tui-home-manager.nix
+    ../../development/development-environments/ralph-tui-home-manager.nix
+    ../../desktop/input/vial/vial-home-manager.nix
+    ../../media/obsidian/obsidian-home-manager.nix
+    ../../media/content-summarization/summarize-home-manager.nix
+    ../../media/terminal-media-viewer/viu-home-manager.nix
+  ]
+  ++ lib.optionals chisePrivateConfigExists [
+    "${privateConfigRoot}/machines/chise/clawde-agents"
+  ];
+}

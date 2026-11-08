@@ -1,0 +1,135 @@
+import pytest
+
+
+class TestBashHerdrUnpinnedAgentStartBlocking:
+    @pytest.mark.parametrize(
+        "command",
+        [
+            "herdr agent start demo --cwd /tmp -- claude",
+            "herdr agent start demo --cwd /tmp --no-focus -- claude",
+            "herdr agent start demo --cwd /tmp --split right -- claude --name demo",
+            "cd /tmp && herdr agent start demo --cwd /tmp -- claude",
+            "true; herdr agent start demo --cwd /tmp -- claude",
+            "herdr agent start demo --cwd /tmp -- claude --tab foo",
+            "herdr agent start demo --workspace-dir x -- claude",
+            "herdr agent start demo --cwd /tmp --workspace w1 -- claude",
+            "herdr agent start demo --cwd /tmp --workspace=w1 --no-focus -- claude",
+            "herdr agent start demo --cwd /tmp --workspace w1 --split down -- claude",
+        ],
+    )
+    def test_blocks_unpinned_agent_start(
+        self,
+        command,
+        invoke_prohibited_command_guard_hook,
+        parse_prohibited_command_guard_system_message,
+    ):
+        result = invoke_prohibited_command_guard_hook(
+            {"tool_name": "Bash", "tool_input": {"command": command}}
+        )
+        assert result.returncode == 0
+        message = parse_prohibited_command_guard_system_message(result.stdout)
+        assert "herdr" in message.lower()
+        assert "--tab" in message.lower() or "--workspace" in message.lower()
+
+    def test_routes_related_delegation_and_unrelated_work_to_their_owners(
+        self,
+        invoke_prohibited_command_guard_hook,
+        parse_prohibited_command_guard_system_message,
+    ):
+        result = invoke_prohibited_command_guard_hook(
+            {
+                "tool_name": "Bash",
+                "tool_input": {"command": "herdr agent start demo -- claude"},
+            }
+        )
+        message = parse_prohibited_command_guard_system_message(result.stdout).lower()
+        assert "--tab" in message
+        assert "--no-focus" in message
+        assert "orchestrate" in message
+        assert "unrelated" in message
+        assert "fresh tab" in message
+
+    def test_blocks_pinned_agent_start_that_bypasses_the_login_shell(
+        self,
+        invoke_prohibited_command_guard_hook,
+        parse_prohibited_command_guard_system_message,
+    ):
+        result = invoke_prohibited_command_guard_hook(
+            {
+                "tool_name": "Bash",
+                "tool_input": {
+                    "command": 'herdr agent start demo --cwd /tmp --tab "$HERDR_TAB_ID" --no-focus -- codex'
+                },
+            }
+        )
+        assert result.returncode == 0
+        message = parse_prohibited_command_guard_system_message(result.stdout).lower()
+        assert "login-interactive" in message
+        assert "normal shell path" in message
+
+    @pytest.mark.parametrize(
+        "command",
+        [
+            "herdr tab close",
+            "herdr pane close",
+            "herdr workspace close",
+            'herdr tab close "$HERDR_TAB_ID"',
+            "herdr tab close $(herdr tab list --workspace w1)",
+            "herdr tab close --all",
+            "herdr tab close w2F:",
+            "cd /tmp && herdr workspace close",
+        ],
+    )
+    def test_blocks_a_close_whose_target_it_cannot_read(
+        self,
+        command,
+        invoke_prohibited_command_guard_hook,
+        parse_prohibited_command_guard_system_message,
+    ):
+        result = invoke_prohibited_command_guard_hook(
+            {"tool_name": "Bash", "tool_input": {"command": command}}
+        )
+        assert result.returncode == 0
+        message = parse_prohibited_command_guard_system_message(result.stdout).lower()
+        assert "literal target id" in message
+
+    @pytest.mark.parametrize(
+        "command",
+        [
+            'herdr agent start demo --cwd /tmp --tab "$HERDR_TAB_ID" --no-focus -- "$SHELL" -lic \'exec "$@"\' herdr-agent-login-shell claude',
+            "herdr agent start demo --cwd /tmp --tab w1:tA -- /run/current-system/sw/bin/bash -lic 'exec \"$@\"' herdr-agent-login-shell codex",
+            "herdr tab create --workspace w1 --no-focus",
+            "herdr tab create --workspace w1 --cwd /tmp --no-focus",
+            "herdr pane run w1:pA claude",
+            "herdr agent rename w1:pA demo",
+            "herdr tab list --workspace w1",
+            "herdr tab close w2F:t3",
+            "herdr pane close w2C:pV",
+            "herdr workspace close w2F",
+            "cd /tmp && herdr tab close w1:tA",
+            "true; herdr pane close w1:pA",
+            "echo 'herdr tab close'",
+            "echo 'herdr tab close w1:tA'",
+            "herdr agent wait demo --status idle",
+            "herdr agent read demo --source recent",
+            "herdr agent send demo 'count to 5'",
+            "echo 'herdr agent start demo -- claude'",
+            "grep 'herdr agent start' notes.md",
+        ],
+    )
+    def test_does_not_block_pinned_or_other_herdr_commands(
+        self,
+        command,
+        invoke_prohibited_command_guard_hook,
+        parse_prohibited_command_guard_system_message,
+    ):
+        result = invoke_prohibited_command_guard_hook(
+            {"tool_name": "Bash", "tool_input": {"command": command}}
+        )
+        assert result.returncode == 0
+        message = (
+            parse_prohibited_command_guard_system_message(result.stdout)
+            if result.stdout
+            else ""
+        )
+        assert message == ""

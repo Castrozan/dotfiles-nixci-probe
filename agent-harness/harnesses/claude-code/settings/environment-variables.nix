@@ -1,0 +1,32 @@
+{ pkgs }:
+{
+  NPM_CONFIG_PREFIX = "/nonexistent";
+  DISABLE_AUTOUPDATER = "1";
+  DISABLE_INSTALLATION_CHECKS = "1";
+
+  CLAUDE_CODE_SHELL = "${pkgs.bash}/bin/bash";
+  CLAUDE_CODE_AUTO_COMPACT_WINDOW = "1000000";
+  CLAUDE_AUTOCOMPACT_PCT_OVERRIDE = "50";
+  CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY = "1";
+  CLAUDE_CODE_DISABLE_AUTO_MEMORY = "1";
+  CLAUDE_CODE_NO_FLICKER = "1";
+  CLAUDE_CODE_SCROLL_SPEED = "3";
+  CLAUDE_ENABLE_STREAM_WATCHDOG = "1";
+
+  BASH_DEFAULT_TIMEOUT_MS = "120000";
+  BASH_MAX_TIMEOUT_MS = "600000";
+  BASH_MAX_OUTPUT_LENGTH = "16000";
+
+  MAX_MCP_OUTPUT_TOKENS = "10000";
+  # An MCP server that cold-starts over npx or uvx can take far longer to answer
+  # initialize than the default window allows: measured 35s and 12s on this machine.
+  # A server that misses the window is dropped silently, leaving the session with no
+  # tools from it and no error, so the window is generous on purpose.
+  MCP_TIMEOUT = "120000";
+
+  CLAUDE_CODE_ENABLE_TELEMETRY = "1";
+  OTEL_METRICS_EXPORTER = "otlp";
+  OTEL_EXPORTER_OTLP_PROTOCOL = "grpc";
+  OTEL_EXPORTER_OTLP_ENDPOINT = "http://127.0.0.1:4317";
+  OTEL_METRIC_EXPORT_INTERVAL = "60000";
+}

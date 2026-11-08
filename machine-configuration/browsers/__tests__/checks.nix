@@ -1,0 +1,110 @@
+{
+  helpers,
+  pkgs,
+  lib,
+  ...
+}:
+let
+  inherit (helpers) mkEvalCheck;
+
+  cfg = helpers.homeManagerTestConfiguration [
+    ../firefox/firefox-home-manager.nix
+    ../chrome/chrome-global-linux-home-manager.nix
+  ];
+
+  darwinFirefox =
+    (helpers.homeManagerTestConfigurationForDarwin [ ../firefox/firefox-home-manager.nix ])
+    .programs.firefox;
+
+  chromeBrokenHardwareVideoDecodingWorkaround =
+    import ../chrome/broken-hardware-video-decoding/chrome-broken-hardware-video-decoding-workaround.nix
+      {
+        inherit pkgs;
+        chromePackage = pkgs.hello;
+      };
+
+  chromeForMachine =
+    hostname:
+    (import ../chrome/broken-mipmap-generation/chrome-broken-mipmap-generation-workaround.nix {
+      inherit pkgs hostname;
+      chromePackage = pkgs.hello;
+    }).chromeForMachine;
+
+  chromeAmdHardwareVideoDecoding =
+    import ../chrome/amd-hardware-video-decoding/chrome-amd-hardware-video-decoding.nix
+      {
+        inherit pkgs;
+        chromePackage = pkgs.hello;
+        mesaPackage = pkgs.hello;
+      };
+
+  chromeLinuxPackage =
+    hostname:
+    import ../chrome/chrome-linux-package.nix {
+      inherit pkgs hostname;
+      latest = {
+        google-chrome = pkgs.hello;
+        mesa = pkgs.hello;
+      };
+    };
+in
+{
+  domain-browser-chise-chrome-selects-amd-hardware-decoding =
+    mkEvalCheck "domain-browser-chise-chrome-selects-amd-hardware-decoding"
+      (lib.head (chromeLinuxPackage "chise").drvAttrs.paths == toString chromeAmdHardwareVideoDecoding)
+      "Chise's common Chrome package must compose the AMD hardware decoder beneath the ANGLE mipmap workaround";
+
+  domain-browser-other-linux-hosts-preserve-video-decoding-policy =
+    mkEvalCheck "domain-browser-other-linux-hosts-preserve-video-decoding-policy"
+      (
+        lib.getName (chromeLinuxPackage "other-host")
+        == "google-chrome-without-broken-hardware-video-decoding"
+      )
+      "Other Linux hosts must keep the existing decoder workaround without selecting Chise's AMD driver";
+
+  domain-browser-chise-chrome-uses-mipmap-generation-workaround =
+    mkEvalCheck "domain-browser-chise-chrome-uses-mipmap-generation-workaround"
+      (lib.getName (chromeForMachine "chise") == "google-chrome-without-broken-mipmap-generation")
+      "Chise Chrome must disable ANGLE mipmap recreation and retain native Wayland presentation";
+
+  domain-browser-other-machines-preserve-chrome-rendering =
+    mkEvalCheck "domain-browser-other-machines-preserve-chrome-rendering"
+      (builtins.toString (chromeForMachine "other-host") == builtins.toString pkgs.hello)
+      "The Chise ANGLE workaround must preserve the original Chrome package on other machines";
+
+  domain-browser-firefox-enabled =
+    mkEvalCheck "domain-browser-firefox-enabled" cfg.programs.firefox.enable
+      "firefox should be enabled";
+
+  domain-browser-firefox-installs-wrapped-package =
+    mkEvalCheck "domain-browser-firefox-installs-wrapped-package"
+      (lib.all (firefox: lib.getName firefox.finalPackage == "firefox") [
+        cfg.programs.firefox
+        darwinFirefox
+      ])
+      "Firefox must install the nixpkgs-wrapped package on Linux and darwin. The wrapper sets MOZ_LEGACY_PROFILES, so Firefox opens the profile home-manager marks Default in its read-only profiles.ini; an unwrapped install such as the Homebrew cask follows its per-install mapping in installs.ini instead, and opens the profile manager whenever that mapping names a profile home-manager does not declare";
+
+  domain-browser-chrome-desktop-entry = mkEvalCheck "domain-browser-chrome-desktop-entry" (
+    cfg.xdg.dataFile ? "applications/chrome-global.desktop"
+  ) "chrome desktop entry should be in XDG_DATA_HOME";
+
+  domain-browser-chrome-no-remote-debugging-flag =
+    let
+      desktopSource = cfg.xdg.dataFile."applications/chrome-global.desktop".source or "";
+    in
+    mkEvalCheck "domain-browser-chrome-no-remote-debugging-flag"
+      (!lib.hasInfix "--remote-debugging-port" (builtins.toString desktopSource))
+      "chrome-global desktop entry should not have --remote-debugging-port (bare Chrome for autoConnect stealth)";
+
+  domain-browser-chrome-disables-accelerated-video-decode =
+    mkEvalCheck "domain-browser-chrome-disables-accelerated-video-decode"
+      (builtins.elem "--disable-accelerated-video-decode" chromeBrokenHardwareVideoDecodingWorkaround.flagsThatStopChromeAdvertisingCodecsItCannotDecode)
+      "Chrome must launch with --disable-accelerated-video-decode. VA-API decode fails to initialize its frame pool on this hybrid NVIDIA/AMD laptop, so every codec already falls back to software, but Chrome keeps answering canPlayType('video/mp4; codecs=\"hvc1\"') with 'probably'. Jellyfin builds its device profile from that answer, direct-plays HEVC files instead of transcoding them, and the browser stalls forever on PIPELINE_ERROR_DECODE with nothing shown to the user. --disable-features=PlatformHEVCDecoderSupport and --disable-features=VaapiVideoDecoder both leave the false claim in place; only this flag clears it";
+
+  domain-browser-chrome-launcher-uses-hardware-video-decoding-workaround =
+    mkEvalCheck "domain-browser-chrome-launcher-uses-hardware-video-decoding-workaround"
+      (lib.any (
+        package: (lib.getName package) == "google-chrome-without-broken-hardware-video-decoding"
+      ) cfg.home.packages)
+      "The chrome-global launcher must ship the wrapped Chrome rather than latest.google-chrome directly, so the flag reaches every entry point that resolves google-chrome-stable on PATH instead of only the desktop entry";
+}
